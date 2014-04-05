@@ -1,0 +1,558 @@
+# Generated automatically from Makefile.in by configure.
+#
+# Copyright (c) 2006, Hartmut Reuter,
+# RZG, Max-Planck-Institut f. Plasmaphysik.
+# All Rights Reserved.
+#
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+CFLAGS = -g -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith
+
+LIBAFSOSDMAJOR=1
+LIBAFSOSDMINOR = @LIBAFSOSDMINOR@
+
+MODULE_CFLAGS = ${SHLIB_CFLAGS} -I${srcdir}/../config
+
+VOL = ${srcdir}/../vol
+VOLOBJ = ../vol
+VOLSER = ${srcdir}/../volser
+VOLSEROBJ = ../volser
+FSINT = ${srcdir}/../fsint
+VICED = ${srcdir}/../viced
+UTIL = ${srcdir}/../util
+LWP = ${srcdir}/../lwp
+VENUS = ${srcdir}/../venus
+RXOSD = ${srcdir}/../rxosd
+
+rxosdobjects = \
+	rxosd.o \
+	rxosd.ss.o \
+	rxosd.cs.o \
+	rxosd.xdr.o \
+	libafshsm.o \
+	lock.o \
+	threadname.o \
+	uuid.o \
+	serverLog.o \
+	fileutil.o \
+	dirpath.o \
+	volparse.o \
+	flipbase64.o \
+	softsig.o \
+	devname.o \
+	common.o \
+	rxosd_ihandle.o \
+	rxosd_namei_ops.o \
+	osddb.cs.o \
+	osddb.xdr.o \
+	r_osddbuser.o \
+	osddbpolicy.o \
+	vicedosd.cs.o \
+	vicedosd.xdr.o
+
+LIBS= \
+     $(top_builddir)/src/vlserver/liboafs_vldb.la \
+     $(top_builddir)/src/libacl/liboafs_acl.la \
+     $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+     $(top_builddir)/src/rxstat/liboafs_rxstat.la \
+     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+     $(top_builddir)/src/fsint/liboafs_fsint.la \
+     $(top_builddir)/src/cmd/liboafs_cmd.la \
+     $(top_builddir)/src/opr/liboafs_opr.la \
+     $(top_builddir)/src/ubik/liboafs_ubik.la \
+     $(top_builddir)/src/util/liboafs_util.la
+
+RXOSDOBJS = \
+	rxosd.cs.o \
+	rxosd.xdr.o
+
+OSDDBOBJS = \
+	osddb.cs.o \
+	osddb.xdr.o \
+	osddbuser.o \
+	osddb.ss.o \
+	osddbprocs.o \
+	osddbpolicy.o
+
+COSDDBOBJS = \
+	osddb.cs.o \
+	osddb.xdr.o \
+	osddbclient.o \
+	c_osddbpolicy.o
+
+VOLOBJS = \
+	vol_osd.o \
+	vol_osd_salv.o \
+	vol_osd.xdr.o \
+	libafsosd.o
+
+DVOLOBJS = \
+	d_vol_osd.o \
+	d_vol_osd_salv.o \
+	vol_osd.xdr.o \
+	d_libafsosd.o
+
+CVOLOBJS = \
+	vol_osdutil.o \
+	vol_osd.xdr.o
+
+VOLSEROBJS = \
+	volserosd.o \
+	volserosd.ss.o \
+	volserosd.cs.o \
+	volserosd.xdr.o
+
+DVOLSEROBJS = \
+	d_volserosd.o \
+	volserosd.ss.o \
+	volserosd.cs.o \
+	volserosd.xdr.o
+
+VICEDOBJS = \
+	vicedosd.ss.o \
+	vicedosd.xdr.o \
+	vicedosd.o
+
+DVICEDOBJS = \
+	vicedosd.ss.o \
+	vicedosd.xdr.o \
+	d_vicedosd.o
+
+CVICEDOBJS = \
+	vicedosd.cs.o \
+	vicedosd.xdr.o \
+	c_libafsosd.o
+
+VENUSOBJS= \
+	venusosd.o
+
+VOSOBJS= \
+	volserosd.cs.o \
+	volserosd.xdr.o \
+	vososd.o
+
+FSINTOBJS= \
+	afsint.cs.o \
+	afsint.xdr.o \
+	afscbint.ss.o \
+	afscbint.xdr.o
+
+LIBOBJS = \
+	${OSDDBOBJS} \
+	${RXOSDOBJS} \
+	${VOLOBJS} \
+	${VICEDOBJS} \
+	${VOLSEROBJS}
+
+DLIBOBJS = \
+	${OSDDBOBJS} \
+	${RXOSDOBJS} \
+	${DVOLOBJS} \
+	${DVICEDOBJS} \
+	${DVOLSEROBJS}
+
+CLIBOBJS= \
+	${VOSOBJS} \
+	${VENUSOBJS} \
+	${CVICEDOBJS} \
+	${RXOSDOBJS} \
+	${CVOLOBJS} \
+	${COSDDBOBJS} \
+	afscbint.ss.o \
+	afscbint.xdr.o
+
+LIBAOBJS = \
+	${RXOSDOBJS} \
+	osddb.cs.o \
+	osddb.xdr.o \
+	volserosd.cs.o \
+	volserosd.xdr.o \
+	vicedosd.ss.o \
+	vicedosd.xdr.o
+
+LIBAFSOSD = libafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
+LIBDAFSOSD = libdafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
+LIBCAFSOSD = libcafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
+
+all: rxosd osd osddbserver ${LIBAFSOSD} ${LIBDAFSOSD} ${LIBCAFSOSD} fs readabyte
+
+${TOP_LIBDIR}/${LIBAFSOSD}: ${LIBAFSOSD}
+	../config/shlib-install -d ${TOP_LIBDIR} \
+		-l libafsosd -M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR}
+
+${TOP_LIBDIR}/${LIBDAFSOSD}: ${LIBDAFSOSD}
+	../config/shlib-install -d ${TOP_LIBDIR} \
+		-l libdafsosd -M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR}
+
+install: ${LIBAFSOSD} ${LIBDAFSOSD} rxosd osd fs
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libdir) \
+		-l libafsosd -M $(LIBAFSOSDMAJOR) -m $(LIBAFSOSDMINOR)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libexecdir) \
+		-l libafsosd -M $(LIBAFSOSDMAJOR) -m $(LIBAFSOSDMINOR)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libdir) \
+		-l libdafsosd -M $(LIBAFSOSDMAJOR) -m $(LIBAFSOSDMINOR)
+	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libexecdir) \
+		-l libdafsosd -M $(LIBAFSOSDMAJOR) -m $(LIBAFSOSDMINOR)
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${LT_INSTALL_PROGRAM} rxosd \
+		${DESTDIR}${afssrvlibexecdir}/rxosd
+	${LT_INSTALL_PROGRAM} osd \
+		${DESTDIR}${bindir}/osd
+	${LT_INSTALL_PROGRAM} fs \
+		${DESTDIR}${bindir}/fs
+	${LT_INSTALL_PROGRAM} vos \
+		${DESTDIR}${sbindir}/vos
+
+dest: ${LIBAFSOSD} ${LIBDAFSOSD} rxosd
+	../config/shlib-install -d ${DEST}/lib \
+		-l libafsosd -M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR}
+	../config/shlib-install -d ${DEST}/lib \
+		-l libdafsosd -M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR}
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} rxosd \
+		${DEST}/root.server/usr/afs/bin/rxosd
+
+rxosd: ${rxosdobjects}
+	${LT_LDRULE_static} ${rxosdobjects} -ldl ${LIBS} $(LIB_hcrypto) \
+			$(LIB_roken) ${MT_LIBS} ${XLIBS}
+
+readabyte: readabyte.o libafshsm.o
+	${LT_LDRULE_static} readabyte.o libafshsm.o -ldl ${LIBS} $(LIB_hcrypto) \
+			$(LIB_roken) ${MT_LIBS} ${XLIBS}
+
+osd: osd.o rxosd.cs.o rxosd.xdr.o r_osddbuser.o osddb.cs.o osddb.xdr.o policy_parser.o osddbpolicy.o cmd_out.o
+	${LT_LDRULE_static} osd.o rxosd.cs.o rxosd.xdr.o r_osddbuser.o osddb.cs.o \
+		osddb.xdr.o policy_parser.o osddbpolicy.o cmd_out.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+
+${LIBAFSOSD}: ${LIBOBJS} libafsosd.map
+	../config/shlib-build -d $(srcdir) -l libafsosd \
+		-M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR} -- \
+		${LIBOBJS} ${MT_LIBS}
+
+${LIBDAFSOSD}: ${DLIBOBJS} libdafsosd.map
+	../config/shlib-build -d $(srcdir) -l libdafsosd \
+		-M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR} -- \
+		${DLIBOBJS} ${MT_LIBS}
+
+${LIBCAFSOSD}: ${CLIBOBJS} libcafsosd.map
+	../config/shlib-build -d $(srcdir) -l libcafsosd \
+		-M ${LIBAFSOSDMAJOR} -m ${LIBAFSOSDMINOR} -- \
+		${CLIBOBJS} ${MT_LIBS}
+
+# vol routines
+
+vol_osd.h: ${srcdir}/vol_osd.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/vol_osd.xg
+
+vol_osd.xdr.c: ${srcdir}/vol_osd.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/vol_osd.xg
+
+vol_osd.xdr.o: vol_osd.xdr.c vol_osd.h
+	${AFS_CCRULE} vol_osd.xdr.c
+
+vol_osd.o: ${srcdir}/vol_osd.c vol_osd.h
+	${AFS_CCRULE} ${srcdir}/vol_osd.c
+
+d_vol_osd.o: ${srcdir}/vol_osd.c vol_osd.h
+	${AFS_CCRULE} -o d_vol_osd.o -DAFS_DEMAND_ATTACH_FS ${srcdir}/vol_osd.c
+
+libafsosd.o: ${RXOSD}/libafsosd.c
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD ${RXOSD}/libafsosd.c
+
+d_libafsosd.o: ${RXOSD}/libafsosd.c
+	${AFS_CCRULE} -o d_libafsosd.o -DBUILD_SHLIBAFSOSD -DAFS_DEMAND_ATTACH_FS \
+		${RXOSD}/libafsosd.c
+
+c_libafsosd.o: ${RXOSD}/libafsosd.c
+	${AFS_CCRULE} -o c_libafsosd.o -DBUILD_SHLIBAFSOSD -DBUILDING_CLIENT_COMMAND \
+		${RXOSD}/libafsosd.c
+
+o_libafsosd.o: ${RXOSD}/libafsosd.c
+	${AFS_CCRULE} -o o_libafsosd.o -DBUILDING_OSDDBSERVER ${RXOSD}/libafsosd.c
+
+rxosd_namei_ops.o: ${srcdir}/rxosd_namei_ops.c
+	${AFS_CCRULE} -DBUILDING_RXOSD ${srcdir}/rxosd_namei_ops.c
+
+devname.o: ${VOL}/devname.c
+	${AFS_CCRULE} -DBUILDING_RXOSD ${VOL}/devname.c
+
+common.o: ${VOL}/common.c
+	${AFS_CCRULE} -DBUILDING_RXOSD ${VOL}/common.c
+
+rxosd_ihandle.o: ${srcdir}/../vol/ihandle.c
+	${AFS_CCRULE} -o rxosd_ihandle.o -DBUILDING_RXOSD ${srcdir}/../vol/ihandle.c
+
+# osddb routines
+
+osddb.h: ${srcdir}/osddb.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/osddb.xg
+
+osddb.cs.c: ${srcdir}/osddb.xg
+	${RXGEN} -A -x -C -o $@ ${srcdir}/osddb.xg
+
+osddb.ss.c: ${srcdir}/osddb.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/osddb.xg
+
+osddb.xdr.c: ${srcdir}/osddb.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/osddb.xg
+
+osddbuser.o: ${srcdir}/osddbuser.c vicedosd.h volserosd.h fs_rxosd_common.h volserosd.h
+	${AFS_CCRULE} ${srcdir}/osddbuser.c
+
+osddbclient.o: ${srcdir}/osddbclient.c vicedosd.h volserosd.h fs_rxosd_common.h
+	${AFS_CCRULE} ${srcdir}/osddbclient.c
+
+osddbpolicy.o: ${srcdir}/osddbpolicy.c
+	${AFS_CCRULE} ${srcdir}/osddbpolicy.c
+
+c_osddbpolicy.o: ${srcdir}/osddbpolicy.c
+	${AFS_CCRULE} -DBUILDING_CLIENT_COMMAND ${srcdir}/osddbpolicy.c
+
+r_osddbuser.o: ${srcdir}/osddbuser.c vicedosd.h volserosd.h fs_rxosd_common.h volserosd.h
+	${AFS_CCRULE} -DBUILDING_RXOSD -o r_osddbuser.o ${srcdir}/osddbuser.c
+
+osddb.xdr.o: osddb.xdr.c osddb.h
+	${AFS_CCRULE} osddb.xdr.c
+
+osddb.cs.o: osddb.cs.c osddb.h
+	${AFS_CCRULE} osddb.cs.c
+
+osddb.ss.o: osddb.ss.c osddb.h
+	${AFS_CCRULE} osddb.ss.c
+
+osddbprocs.o: ${srcdir}/osddbprocs.c
+	${AFS_CCRULE} -DBUILDING_OSDDBSERVER -DAFS_PTHREAD_ENV ${srcdir}/osddbprocs.c
+
+# rxosd stuff
+
+rxosd.h: ${RXOSD}/rxosd.xg
+	${RXGEN} -A -x -h -o $@ ${RXOSD}/rxosd.xg
+
+rxosd.cs.c: ${RXOSD}/rxosd.xg
+	${RXGEN} -A -x -C -o $@ ${RXOSD}/rxosd.xg
+
+rxosd.xdr.c: ${RXOSD}/rxosd.xg
+	${RXGEN} -A -x -c -o $@ ${RXOSD}/rxosd.xg
+
+rxosd.cs.o: rxosd.cs.c rxosd.h
+	${AFS_CCRULE} rxosd.cs.c
+
+rxosd.xdr.o: rxosd.xdr.c rxosd.h
+	${AFS_CCRULE} rxosd.xdr.c
+
+rxosd.ss.c: ${RXOSD}/rxosd.xg
+	${RXGEN} -A -x -S -o $@ ${RXOSD}/rxosd.xg
+
+rxosd.ss.o: rxosd.ss.c rxosd.h
+	${AFS_CCRULE} rxosd.ss.c
+
+rxosd.o: ${srcdir}/rxosd.c rxosd.h volint.h osddb.h vicedosd.h fs_rxosd_common.h
+	${AFS_CCRULE} -DBUILDING_RXOSD ${srcdir}/rxosd.c
+
+readabyte.o: ${srcdir}/readabyte.c
+	${AFS_CCRULE} -DBUILDING_RXOSD ${srcdir}/readabyte.c
+
+osd.o: ${srcdir}/osd.c
+	${AFS_CCRULE} -DBUILDING_CLIENT_COMMAND ${srcdir}/osd.c
+
+cmd_out.o: ${srcdir}/cmd_out.c
+	${AFS_CCRULE} ${srcdir}/cmd_out.c
+
+policies.tab.c: policies.y
+	${YACC} -b policies ${srcdir}/policies.y
+
+policy_parser.o: policies.tab.c
+	${AFS_CCRULE} -o policy_parser.o policies.tab.c
+
+libafshsm.o: ${srcdir}/libafshsm.c ${srcdir}/rxosd_hsm.h
+	${AFS_CCRULE} -DBUILDING_RXOSD ${srcdir}/libafshsm.c
+
+# salvager stuff
+
+vol_osd_salv.o: ${srcdir}/vol_osd.c
+	${AFS_CCRULE} -DBUILD_SALVAGER -DBUILD_SHLIBAFSOSD -o vol_osd_salv.o ${srcdir}/vol_osd.c
+
+d_vol_osd_salv.o: ${srcdir}/vol_osd.c
+	${AFS_CCRULE} -DBUILD_SALVAGER -DBUILD_SHLIBAFSOSD -DAFS_DEMAND_ATTACH_FS \
+		-o d_vol_osd_salv.o ${srcdir}/vol_osd.c
+
+# fsint stuff
+
+afscbint.h: ${FSINT}/afscbint.xg
+	${RXGEN} -A -x -h -o $@ ${FSINT}/afscbint.xg
+
+afscbint.ss.c: ${FSINT}/afscbint.xg
+	${RXGEN} -A -x -S -o $@ ${FSINT}/afscbint.xg
+
+afscbint.xdr.c: ${FSINT}/afscbint.xg
+	${RXGEN} -A -x -y -c -o $@ ${FSINT}/afscbint.xg
+
+afscbint.ss.o: afscbint.ss.c afscbint.h
+	${AFS_CCRULE} afscbint.ss.c
+
+afscbint.xdr.o: afscbint.xdr.c afscbint.h
+	${AFS_CCRULE} afscbint.xdr.c
+
+afsint.h: ${FSINT}/afsint.xg
+	${RXGEN} -A -x -h -o $@ ${FSINT}/afsint.xg
+
+afsint.cs.c: ${FSINT}/afsint.xg
+	${RXGEN} -A -x -C -o $@ ${FSINT}/afsint.xg
+
+afsint.xdr.c: ${FSINT}/afsint.xg
+	${RXGEN} -A -x -c -o $@ ${FSINT}/afsint.xg
+
+afsint.cs.o: afsint.cs.c afsint.h
+	${AFS_CCRULE} afsint.cs.c
+
+afsint.xdr.o: afsint.xdr.c afsint.h
+	${AFS_CCRULE} afsint.xdr.c
+
+fs_rxosd_common.h: ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -h -o $@ ${RXOSD}/fs_rxosd_common.xg
+
+vicedosd.h: ${RXOSD}/vicedosd.xg ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -h -o $@ ${RXOSD}/vicedosd.xg
+
+vicedosd.ss.c: ${RXOSD}/vicedosd.xg ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -S -o $@ ${RXOSD}/vicedosd.xg
+
+vicedosd.cs.c: ${RXOSD}/vicedosd.xg ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -C -o $@ ${RXOSD}/vicedosd.xg
+
+Kvicedosd.cs.c: ${RXOSD}/vicedosd.xg ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -k -C -o $@ ${RXOSD}/vicedosd.xg
+
+vicedosd.xdr.c: ${RXOSD}/vicedosd.xg ${RXOSD}/fs_rxosd_common.xg
+	${RXGEN} -A -x -c -o $@ ${RXOSD}/vicedosd.xg
+
+vicedosd.xdr.o: vicedosd.xdr.c vicedosd.h afsint.h  fs_rxosd_common.h
+	${AFS_CCRULE} vicedosd.xdr.c
+
+vicedosd.ss.o: vicedosd.ss.c vicedosd.h afsint.h fs_rxosd_common.h
+	${AFS_CCRULE} vicedosd.ss.c
+
+vicedosd.cs.o: vicedosd.cs.c vicedosd.h afsint.h fs_rxosd_common.h
+	${AFS_CCRULE} vicedosd.cs.c
+
+# fileserver stuff
+
+vicedosd.o: ${srcdir}/vicedosd.c
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD ${srcdir}/vicedosd.c
+
+d_vicedosd.o: ${srcdir}/vicedosd.c
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD -DAFS_DEMAND_ATTACH_FS -o d_vicedosd.o ${srcdir}/vicedosd.c
+
+# volserver stuff
+
+volser.h: ${VOLSEROBJ}/volser.h
+	${CP} ${VOLSEROBJ}/volser.h ./
+
+volint.h: ${VOLSER}/volint.xg
+	${RXGEN} -A -x -h -o $@ ${VOLSER}/volint.xg
+
+volserosd.h: ${srcdir}/volserosd.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/volserosd.xg
+
+volserosd.ss.c: ${srcdir}/volserosd.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/volserosd.xg
+
+volserosd.cs.c: ${srcdir}/volserosd.xg
+	${RXGEN} -A -x -C -o $@ ${srcdir}/volserosd.xg
+
+volserosd.xdr.c: ${srcdir}/volserosd.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/volserosd.xg
+
+volserosd.ss.o: volserosd.ss.c volserosd.h volint.h
+	${AFS_CCRULE} volserosd.ss.c
+
+volserosd.cs.o: volserosd.cs.c volserosd.h volint.h
+	${AFS_CCRULE} volserosd.cs.c
+
+volserosd.xdr.o: volserosd.xdr.c volserosd.h
+	${AFS_CCRULE} volserosd.xdr.c
+
+volserosd.o: ${srcdir}/volserosd.c volser.h
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD ${srcdir}/volserosd.c
+
+d_volserosd.o: ${srcdir}/volserosd.c volser.h
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD -DAFS_DEMAND_ATTACH_FS -o d_volserosd.o \
+		${srcdir}/volserosd.c
+
+# util stuff
+
+uuid.o: ${UTIL}/uuid.c
+	${AFS_CCRULE} ${UTIL}/uuid.c
+
+serverLog.o: ${UTIL}/serverLog.c
+	${AFS_CCRULE} ${UTIL}/serverLog.c
+
+fileutil.o: ${UTIL}/fileutil.c
+	${AFS_CCRULE} ${UTIL}/fileutil.c
+
+volparse.o: ${UTIL}/volparse.c
+	${AFS_CCRULE} ${UTIL}/volparse.c
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${AFS_CCRULE} ${UTIL}/flipbase64.c
+
+dirpath.o: ${UTIL}/dirpath.c
+	${AFS_CCRULE} ${UTIL}/dirpath.c
+
+softsig.o: ${UTIL}/softsig.c
+	${AFS_CCRULE} ${UTIL}/softsig.c
+
+# lwp stuff
+
+lock.o: ${LWP}/lock.c
+	${AFS_CCRULE} ${LWP}/lock.c
+
+threadname.o: ${LWP}/threadname.c
+	${AFS_CCRULE} ${LWP}/threadname.c
+
+# venus stuff
+
+fs.o: ${VENUS}/fs.c
+	${AFS_CCRULE} -DBUILDING_CLIENT_COMMAND ${VENUS}/fs.c
+
+v_libafsosd.o: ${RXOSD}/libafsosd.c
+	${AFS_CCRULE} -DBUILDING_CLIENT_COMMAND -o v_libafsosd.o ${RXOSD}/libafsosd.c
+
+fs: fs.o v_libafsosd.o ${LIBS}
+	$(LT_LDRULE_static) fs.o v_libafsosd.o ${TOP_LIBDIR}/libprot.a ${LIBS} \
+		${TOP_LIBDIR}/libafshcrypto.a $(LIB_roken) -ldl ${XLIBS}
+
+venusosd.o: ${srcdir}/venusosd.c
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD -DBUILDING_CLIENT_COMMAND ${srcdir}/venusosd.c
+
+vososd.o: ${srcdir}/vososd.c
+	${AFS_CCRULE} -DBUILD_SHLIBAFSOSD -DBUILDING_CLIENT_COMMAND ${srcdir}/vososd.c
+
+osdmetadata: osdmetadata.o vol_osdutil.o
+	${CC} ${CFLAGS} -o osdmetadata osdmetadata.o vol_osdutil.o vol_osd.xdr.o \
+		../../lib/libcmd.a ../../lib/librx.a ../../lib/util.a
+
+osddbserver.o: ${srcdir}/osddbserver.c osddb.h
+	${AFS_CCRULE} -DBUILDING_OSDDBSERVER  ${srcdir}/osddbserver.c
+
+osddbserver: osddbserver.o o_libafsosd.o ${LIBS}
+	$(LT_LDRULE_static) osddbserver.o o_libafsosd.o ${LIBS} \
+		${TOP_LIBDIR}/libafshcrypto.a $(LIB_roken) -ldl ${XLIBS}
+
+clean:
+	$(RM) -f *.o libafsosd.so* libdafsosd.so* libcafsosd.so* \
+		 *.ss.c *.cs.c *.xdr.c  *int.h osddb.h rxosd.h vol_osd.h  \
+		 fs_rxosd_common.h vicedosd.h volserosd.h policies.tab.c \
+		volser.h osdmetadata fs osd rxosd readabyte \
+		osddbserver
