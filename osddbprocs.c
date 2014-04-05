@@ -72,7 +72,7 @@
 #include <afs/afsutil.h>
 #include "osddb.h"
 #define BUILDING_OSDDBSERVER 1
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 
 extern int ubeacon_AmSyncSite(void);
 

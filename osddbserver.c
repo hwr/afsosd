@@ -75,7 +75,7 @@
 #include <afs/com_err.h>
 #include <afs/audit.h>
 #include "osddb.h"
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 
 struct osddb_ops_v0 *osddb = NULL;
 

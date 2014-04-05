@@ -148,7 +148,7 @@
 
 #include "rxosd.h"
 #include <afs/volser.h>
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #include "vol_osd_inline.h"
 #include "osddbuser.h"
 

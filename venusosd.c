@@ -67,7 +67,7 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 #include "vol_osd_prototypes.h"
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #include "osddbuser.h"
 
 #define FetchStatusProtocol ResidencyMask

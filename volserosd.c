@@ -90,7 +90,7 @@
 #include "osddbuser.h"
 #include "vicedosd.h"
 #include "vol_osd_prototypes.h"
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 
 extern char **osdExportedVariablesPtr;
 

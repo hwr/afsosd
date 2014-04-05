@@ -74,7 +74,7 @@
 #define COMPILING_OSDDBUSER 1
 #endif
 #ifdef BUILD_LIBAFSOSD_A
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #endif
 
 #ifdef BUILDING_CLIENT_COMMAND

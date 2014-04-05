@@ -70,7 +70,7 @@
 #include "../volser/vsutils_prototypes.h"
 #include "../volser/lockdata.h"
 #include "../volser/lockprocs_prototypes.h"
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #include "volserosd.h"
 #include "osddb.h"
 #include "fs_rxosd_common.h"

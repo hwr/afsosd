@@ -110,7 +110,7 @@
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <afs/dir.h>
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #include "osddbuser.h"
 
 #define FetchStatusProtocol ResidencyMask

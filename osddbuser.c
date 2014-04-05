@@ -74,7 +74,7 @@
 #ifdef BUILD_SHLIBAFSOSD
 #include <afs/ihandle.h>
 #define COMPILING_OSDDBUSER 1
-#include "afsosd.h"
+#include "../rxosd/afsosd.h"
 #endif
 
 #ifdef AFS_PTHREAD_ENV
