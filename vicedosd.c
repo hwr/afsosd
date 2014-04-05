@@ -2204,7 +2204,7 @@ fill_status(Vnode *targetptr, afs_fsize_t targetLen, AFSFetchStatus *status)
                     status->Length_hi,
                     status->Length);
             if (tstat.st_size != targetLen) {
-                ViceLog(3,("GetStatus: new file length %lu instead of %llu for (%u.%u.%u)\n",
+                ViceLog(3,("GetStatus: new file length %llu instead of %llu for (%u.%u.%u)\n",
                             tstat.st_size,
                             targetLen,
                             targetptr->volumePtr->hashid,

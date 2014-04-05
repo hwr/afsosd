@@ -73,33 +73,7 @@
  *
  * #undef REPAIR_BAD_OBJIDS
  */
-#include <limits.h>
-#ifdef HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
-#endif
 
-#ifdef HAVE_SYS_FILE_H
-# include <sys/file.h>
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/statvfs.h>
-#include <afs/opr.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <netdb.h>
-#ifdef AFS_NT40_ENV
-# include <time.h>
-# include <fcntl.h>
-#else
-# include <sys/time.h>
-# include <sys/file.h>
-# include <unistd.h>
-#endif
-#include <sys/stat.h>
-
-#include <afsconfig.h>
 #include <rx/xdr.h>
 #include <rx/rx_queue.h>
 #include <afs/auth.h>
@@ -116,10 +90,6 @@
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
-#ifdef AFS_NT40_ENV
-#include "ntops.h"
-#include <io.h>
-#endif
 #include "../vol/vnode.h"
 #include "../vol/volume.h"
 #include "../vol/partition.h"
@@ -1521,8 +1491,8 @@ extract_objects(Volume *vol, VnodeDiskObject *vd, afs_uint32 vN, struct osdobjec
         list->osdobjectList_val = (struct osdobject *)
 	        malloc(list->osdobjectList_len * sizeof(struct osdobject));
         if (!list->osdobjectList_val) {
-	    ViceLog(0,("extract_objects: couldn't malloc %u bytes for object list of %u.%u.%u\n",
-			list->osdobjectList_len * sizeof(struct osdobject),
+	    ViceLog(0,("extract_objects: couldn't malloc %lu bytes for object list of %u.%u.%u\n",
+			(long unsigned int)list->osdobjectList_len * sizeof(struct osdobject),
 			V_id(vol), vN, vd->uniquifier));
 	    code = ENOMEM;
         }
@@ -6216,7 +6186,7 @@ salvage(struct rx_call *call, Volume *vol,  afs_int32 flag,
 			    if (size != st.st_size) {
 	    		        sprintf(line, "Object %u.%u.%u.%u has wrong length %llu instead of %llu on local disk",
 				    V_id(vol), vN, vd->uniquifier, tag,
-				    st.st_size, size);
+				    (afs_fsize_t)st.st_size, size);
 			        if (flag & SALVAGE_UPDATE) {
 				    afs_uint32 now = FT_ApproxTime();
 				    size = st.st_size;
