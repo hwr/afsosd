@@ -1521,7 +1521,7 @@ extract_objects(Volume *vol, VnodeDiskObject *vd, afs_uint32 vN, struct osdobjec
         list->osdobjectList_val = (struct osdobject *)
 	        malloc(list->osdobjectList_len * sizeof(struct osdobject));
         if (!list->osdobjectList_val) {
-	    ViceLog(0,("extract_objects: couldn't malloc %lu bytes for object list of %u.%u.%u\n",
+	    ViceLog(0,("extract_objects: couldn't malloc %u bytes for object list of %u.%u.%u\n",
 			list->osdobjectList_len * sizeof(struct osdobject),
 			V_id(vol), vN, vd->uniquifier));
 	    code = ENOMEM;
@@ -6214,7 +6214,7 @@ salvage(struct rx_call *call, Volume *vol,  afs_int32 flag,
 	    		        rx_Write(call, line, strlen(line));
 			    }
 			    if (size != st.st_size) {
-	    		        sprintf(line, "Object %u.%u.%u.%u has wrong length %lu instead of %llu on local disk",
+	    		        sprintf(line, "Object %u.%u.%u.%u has wrong length %llu instead of %llu on local disk",
 				    V_id(vol), vN, vd->uniquifier, tag,
 				    st.st_size, size);
 			        if (flag & SALVAGE_UPDATE) {
