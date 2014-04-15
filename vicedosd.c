@@ -246,8 +246,6 @@ struct afs_FSStats {
 
 struct afs_FSStats afs_fsstats;
 
-int ClientsWithAccessToFileserverPartitions = 0;
-
 afs_int32 MaybeStore_OSD(Volume * volptr, Vnode * targetptr,
 		struct AFSFid * Fid,
 		struct client * client, struct rx_call * Call,
@@ -2193,37 +2191,6 @@ fill_status(Vnode *targetptr, afs_fsize_t targetLen, AFSFetchStatus *status)
 	      && targetLen <= max_move_osd_size)
 		status->FetchStatusProtocol |= POSSIBLY_OSD;
 	}
-    }
-    if (ClientsWithAccessToFileserverPartitions && VN_GET_INO(targetptr)) {
-        namei_t name;
-        struct afs_stat_st tstat;
-
-        namei_HandleToName(&name, targetptr->handle);
-        if (afs_stat(name.n_path, &tstat) == 0) {
-            SplitOffsetOrSize(tstat.st_size,
-                    status->Length_hi,
-                    status->Length);
-            if (tstat.st_size != targetLen) {
-                ViceLog(3,("GetStatus: new file length %lu instead of %llu for (%u.%u.%u)\n",
-                            tstat.st_size,
-                            targetLen,
-                            targetptr->volumePtr->hashid,
-                            targetptr->vnodeNumber,
-                            targetptr->disk.uniquifier));
-#ifdef AFS_DEMAND_ATTACH_FS
-                if (Vn_state(targetptr) == VN_STATE_EXCLUSIVE) {
-#else
-                if (WriteLocked(&targetptr->lock)) {
-#endif
-                    afs_int64 adjustSize;
-                    adjustSize = nBlocks(tstat.st_size)
-                                            - nBlocks(targetLen);
-                    V_diskused(targetptr->volumePtr) += adjustSize;
-                    VN_SET_LEN(targetptr, tstat.st_size);
-                    targetptr->changed_newTime = 1;
-                }
-            }
-        }
     }
 }
 
