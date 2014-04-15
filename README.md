@@ -14,13 +14,11 @@ the AFS/OSD extensions in the future.
 The contents of src/afsosd is hosted at github in the project
 "git://github.com/hwr/afsosd.git"
 
-If you want to compile openafs with afs/osd you need
+If you want to compile openafs with afs/osd go to src and do a
+"git clone git://github.com/hwr/afsosd.git afsosd"
 
-1)	go to src and do a "git clone git://github.com/hwr/afsosd.git afsosd
-
-2)	do the openafs configure with "--enable-object-storage"
-
-Then the subdirectory src/afsosd is included in the build.
+Then do the openafs configure. This will then include src/afsosd
+in the build 
 
 The subdirectory src/rxosd now contains only the code needed to build the
 hooks in the main openafs code for the fileserver, volserver, salvager,
