@@ -13,7 +13,7 @@ extern afs_int32 FlushMetadataHandle(Volume *vol, struct VnodeDiskObject *vd,
 extern afs_int32 FreeMetadataEntryChain(Volume *vol, afs_uint32 n, afs_uint32 vN,
 				afs_uint32 vU);
 extern afs_int32 fill_osd_file(Vnode *vn, struct async *a, afs_int32 flag,
-				afs_uint32 *fileno, afs_uint32 user);
+				afs_int32 *fileno, afs_uint32 user);
 extern afs_int32 replace_osd(struct Vnode *vn, afs_uint32 old, afs_int32 new,
 				afs_uint32 *result);
 extern void destroy_async_list(struct async *a);
