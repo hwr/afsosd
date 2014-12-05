@@ -1850,106 +1850,106 @@ init_fscmd_afsosd(char *myVersion, char **versionstring,
     if (code)
 	return code;
 
-    ts = cmd_CreateSyntax("protocol", ProtocolCmd, NULL,
+    ts = cmd_CreateSyntax("protocol", ProtocolCmd, NULL, 0,
                         "show, enable or disable protocols");
     cmd_AddParm(ts, "-enable", CMD_LIST, CMD_OPTIONAL, "RXOSD or VICEPACCESS");
     cmd_AddParm(ts, "-disable", CMD_LIST, CMD_OPTIONAL, "RXOSD or VICEPACCESS");
 
-    ts = cmd_CreateSyntax("translate", translateCmd, NULL,
+    ts = cmd_CreateSyntax("translate", translateCmd, NULL, 0,
                           "translate namei-name to fid and vice-versa");
-    cmd_IsAdministratorCommand(ts);
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-namei", CMD_LIST, CMD_OPTIONAL, "namei-path, may start with AFSIDat");
     cmd_AddParm(ts, "-fid", CMD_FLAG, CMD_OPTIONAL, "fid for reverse translation");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, (char *) 0);
     cmd_AddParm(ts, "-nopath", CMD_FLAG, CMD_OPTIONAL, "don't resolve path");
 
-    ts = cmd_CreateSyntax("osd", osdCmd, NULL, "list osd metadata of a file");
+    ts = cmd_CreateSyntax("osd", osdCmd, NULL, 0, "list osd metadata of a file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "file");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
-    ts = cmd_CreateSyntax("fidosd", osdCmd, NULL,
+    ts = cmd_CreateSyntax("fidosd", osdCmd, NULL, 0,
                         "list osd metadata of a file");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "fid");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
-    ts = cmd_CreateSyntax("archive", ArchiveCmd, NULL, "add osd archive copy");
-    cmd_IsAdministratorCommand(ts);
+    ts = cmd_CreateSyntax("archive", ArchiveCmd, NULL, 0, "add osd archive copy");
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "filename");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_OPTIONAL, "osd number");
     cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL, "use other archive copy");
     cmd_AddParm(ts, "-wait", CMD_SINGLE, CMD_OPTIONAL, "wait interval (s) for tape");
 
-    ts = cmd_CreateSyntax("fidarchive", ArchiveCmd, NULL, "add osd archive copy");
-    cmd_IsAdministratorCommand(ts);
+    ts = cmd_CreateSyntax("fidarchive", ArchiveCmd, NULL, 0, "add osd archive copy");
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "volume.file.uniquifier");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_OPTIONAL, "osd number");
     cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL, "use other archive copy");
     cmd_AddParm(ts, "-wait", CMD_SINGLE, CMD_OPTIONAL, "wait interval (s) for tape");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
-    ts = cmd_CreateSyntax("wipe", WipeCmd, NULL,
+    ts = cmd_CreateSyntax("wipe", WipeCmd, NULL, 0,
                         "keep only archival copies of file");
-    cmd_IsAdministratorCommand(ts);
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "filename");
 
-    ts = cmd_CreateSyntax("fidwipe", WipeCmd, NULL,
+    ts = cmd_CreateSyntax("fidwipe", WipeCmd, NULL, 0,
                         "keep only archival copies of file");
-    cmd_IsAdministratorCommand(ts);
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "volume.file.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
-    ts = cmd_CreateSyntax("fidoldversion", WipeCmd, NULL,
+    ts = cmd_CreateSyntax("fidoldversion", WipeCmd, NULL, 0,
                         "reset file to old archived version");
-    cmd_IsAdministratorCommand(ts);
+    /* cmd_IsAdministratorCommand(ts); */
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "volume.file.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-version", CMD_SINGLE, CMD_REQUIRED, "archiveVersion");
 
-    ts = cmd_CreateSyntax("createstripedfile", CreateOsdCmd, NULL,
+    ts = cmd_CreateSyntax("createstripedfile", CreateOsdCmd, NULL, 0,
                         "create striped osd file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "filename");
     cmd_AddParm(ts, "-stripes", CMD_SINGLE, CMD_REQUIRED, "number of stripes (1, 2, 4, 8)");
     cmd_AddParm(ts, "-size", CMD_SINGLE, CMD_REQUIRED, "stripe size (number between 12 and 19 used as power of 2)");
     cmd_AddParm(ts, "-copies", CMD_SINGLE, CMD_OPTIONAL, "number of copies (stripes * copies <= 8)");
 
-    ts = cmd_CreateSyntax("replaceosd", ReplaceOsd, NULL,
+    ts = cmd_CreateSyntax("replaceosd", ReplaceOsd, NULL, 0,
                 "replace an osd by another one or transfer file to local_disk");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "filename");
     cmd_AddParm(ts, "-old", CMD_SINGLE, CMD_REQUIRED, "id of osd to replace");
     cmd_AddParm(ts, "-new", CMD_SINGLE, CMD_OPTIONAL, "id of new osd or 1 for local_disk)");
 
-    ts = cmd_CreateSyntax("fidreplaceosd", ReplaceOsd, NULL,
+    ts = cmd_CreateSyntax("fidreplaceosd", ReplaceOsd, NULL, 0,
                 "replace an osd by another one or transfer file to local_disk");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "Fid");
     cmd_AddParm(ts, "-old", CMD_SINGLE, CMD_REQUIRED, "id of osd to replace");
     cmd_AddParm(ts, "-new", CMD_SINGLE, CMD_OPTIONAL, "id of new osd or 1 for local_disk)");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell where file lives");
 
-    ts = cmd_CreateSyntax("prefetch", PrefetchCmd, NULL,
+    ts = cmd_CreateSyntax("prefetch", PrefetchCmd, NULL, 0,
                         "trigger restore of wiped file");
     cmd_AddParm(ts, "-file", CMD_LIST, CMD_REQUIRED, "filename");
     cmd_AddParm(ts, "-wait", CMD_FLAG, CMD_OPTIONAL, "until file is on-line");
 
-    ts = cmd_CreateSyntax("fidprefetch", PrefetchCmd, NULL,
+    ts = cmd_CreateSyntax("fidprefetch", PrefetchCmd, NULL, 0,
                         "trigger restore of wiped file");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "Fid");
     cmd_AddParm(ts, "-wait", CMD_FLAG, CMD_OPTIONAL, "until file is on-line");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell where file lives");
 
-    ts = cmd_CreateSyntax("ls", LsCmd, NULL, "list file(s) in AFS");
+    ts = cmd_CreateSyntax("ls", LsCmd, NULL, 0, "list file(s) in AFS");
     cmd_AddParm(ts, "-object", CMD_SINGLE, CMD_OPTIONAL, "file or directory");
     cmd_AddParm(ts, "-fid", CMD_FLAG, CMD_OPTIONAL, "show fid instead of date");
 
-    ts = cmd_CreateSyntax("fidlistarch", ListArchCmd, NULL, "list archival osds");
+    ts = cmd_CreateSyntax("fidlistarch", ListArchCmd, NULL, 0, "list archival osds");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_OPTIONAL, "file");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
-    ts = cmd_CreateSyntax("setpolicy", SetPolicyCmd, NULL,
+    ts = cmd_CreateSyntax("setpolicy", SetPolicyCmd, NULL, 0,
                             "choose OSD policy for directory by index");
     cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_REQUIRED, "policy index");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_REQUIRED, "directory");
 
-    ts = cmd_CreateSyntax("policy", GetPoliciesCmd, NULL,
+    ts = cmd_CreateSyntax("policy", GetPoliciesCmd, NULL, 0,
               "find out about effective OSD policies at the given position");
     cmd_AddParm(ts, "-location", CMD_SINGLE, CMD_OPTIONAL, "file or directory");
     cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human friendly output");

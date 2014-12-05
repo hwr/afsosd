@@ -5386,12 +5386,9 @@ bad:
 	free(buf);
 
     if (fdP) {
-	int code2;
         /* FDH_SYNC(fdP); does not a sync, sets only a flag in the ihandle */
 	unlock_file(fdP, 0);
-        code2 = FDH_REALLYCLOSE(fdP);
-	if (!code)
-	    code = code2;
+        FDH_REALLYCLOSE(fdP);
     }
     oh_release(oh);
     if (code) {
@@ -6562,12 +6559,9 @@ bad:
 	free(buf);
 
     if (fd) {
-	int code2;
         /* FDH_SYNC(fdP); does not a sync, sets only a flag in the ihandle */
 	unlock_file(fd, 0);
-        code2 = FDH_REALLYCLOSE(fd);
-	if (!code)
-	    code = code2;
+        FDH_REALLYCLOSE(fd);
     }
     oh_release(oh);
     if (fdin) {

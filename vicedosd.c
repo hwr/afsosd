@@ -985,7 +985,7 @@ FsCmd(struct rx_call * acall, struct AFSFid * Fid,
 				&Outputs->int32s[0]);
 	    if (!code) {
 		rx_KeepAliveOn(acall);
-		BreakCallBack(client->host, Fid, 0);
+		BreakCallBack(client->z.host, Fid, 0);
 	    }
 
     Bad_ReplaceOSD:
@@ -1222,7 +1222,7 @@ GetOSDlocation(struct rx_call *acall, AFSFid *Fid, afs_uint64 offset,
     if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
         goto Bad_GetOSDloc;
 
-    tuuid = &thost->interface->uuid;
+    tuuid = &thost->z.interface->uuid;
     if (!tuuid) {
 	ViceLog(0, (" No thost->interface-uuid\n"));
 	tuuid = NULL;
@@ -1284,7 +1284,7 @@ GetOSDlocation(struct rx_call *acall, AFSFid *Fid, afs_uint64 offset,
         }
     }
     if (a->type == 1 || a->type == 2)
-        errorCode = get_osd_location(volptr, targetptr, flag, client->ViceId,
+        errorCode = get_osd_location(volptr, targetptr, flag, client->z.ViceId,
 				offset, length, filelength,
 				rx_PeerOf(rx_ConnectionOf(acall)),
 				tuuid, maxLength, a);
@@ -1295,13 +1295,13 @@ GetOSDlocation(struct rx_call *acall, AFSFid *Fid, afs_uint64 offset,
 	afs_int32 cb;
         /* if a r/w volume, promise a callback to the caller */
         if (VolumeWriteable(volptr)) {
-	    cb = AddCallBack1(client->host, Fid, 0, 1, 0);
+	    cb = AddCallBack1(client->z.host, Fid, 0, 1, 0);
             SetCallBackStruct(cb, CallBack);
         } else {
             struct AFSFid myFid;
             bzero(&myFid, sizeof(struct AFSFid));
             myFid.Volume = Fid->Volume;
-	    cb = AddCallBack1(client->host, &myFid, 0, 3, 0);
+	    cb = AddCallBack1(client->z.host, &myFid, 0, 3, 0);
             SetCallBackStruct(cb, CallBack);
         }
     }
@@ -1332,8 +1332,8 @@ afs_int32 evalclient(void *rock, afs_int32 user)
 {
      afs_int32 i;
      struct client *client = (struct client *)rock;
-     for ( i = 0 ; i < client->CPS.prlist_len ; i++ ) {
-         if ( client->CPS.prlist_val[i] == user )
+     for ( i = 0 ; i < client->z.CPS.prlist_len ; i++ ) {
+         if ( client->z.CPS.prlist_val[i] == user )
              return 1;
      }
      return 0;
@@ -1714,12 +1714,12 @@ SRXAFSOSD_BringOnline(struct rx_call *acall, AFSFid *Fid,
 	parentwhentargetnotdir = NULL;
     }
     if (!targetptr->disk.osdFileOnline) {
-        afs_uint32 fileno;
+        afs_int32 fileno;
         if (!(VolumeWriteable(volptr))) {    /* No way to bring the file on-line */
             errorCode = EIO;
             goto Bad_BringOnline;
         }
-        errorCode = fill_osd_file(targetptr, NULL, 0, &fileno, client->ViceId);
+        errorCode = fill_osd_file(targetptr, NULL, 0, &fileno, client->z.ViceId);
     }
 
 Bad_BringOnline:
@@ -1729,13 +1729,13 @@ Bad_BringOnline:
         GetStatus(targetptr, OutStatus, rights, anyrights, &tparent);
         /* if a r/w volume, promise a callback to the caller */
         if (VolumeWriteable(volptr)) {
-            cb = AddCallBack1(client->host, Fid, 0, 1, 0);
+            cb = AddCallBack1(client->z.host, Fid, 0, 1, 0);
             SetCallBackStruct(cb, CallBack);
         } else {
             struct AFSFid myFid;
             bzero(&myFid, sizeof(struct AFSFid));
             myFid.Volume = Fid->Volume;
-            cb = AddCallBack1(client->host, &myFid, 0, 3, 0);
+            cb = AddCallBack1(client->z.host, &myFid, 0, 3, 0);
             SetCallBackStruct(cb, CallBack);
 	}
     }
@@ -2033,7 +2033,7 @@ SRXAFSOSD_EndAsyncStore(struct rx_call *acall, AFSFid *Fid, afs_uint64 transid,
 
     rx_KeepAliveOn(acall);
 
-    BreakCallBack(client->host, Fid, 0);
+    BreakCallBack(client->z.host, Fid, 0);
   NothingHappened:
     errorCode = EndAsyncTransaction(acall, Fid, transid);
   Bad_EndAsyncStore:
@@ -2115,7 +2115,7 @@ legacyStoreData(Volume * volptr, Vnode **targetptr, struct AFSFid * Fid,
     }
     rx_SetLocalStatus(Call, 1);
     errorCode = xchange_data_with_osd(Call, targetptr, Pos, Length,
-				    FileLength, 1, client->ViceId);
+				    FileLength, 1, client->z.ViceId);
     if (errorCode)
 	return errorCode;
     VN_GET_LEN(vnodeLength, *targetptr);

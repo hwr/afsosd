@@ -1095,7 +1095,7 @@ init_voscmd_afsosd(char *myVersion, char **versionstring,
     if (code)
 	return code;
 
-    ts = cmd_CreateSyntax("archcand", Archcand, NULL,
+    ts = cmd_CreateSyntax("archcand", Archcand, NULL, 0,
                           "get list of fids which need an archval copy");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-minsize", CMD_SINGLE, CMD_OPTIONAL, "minimal file size");
@@ -1108,7 +1108,7 @@ init_voscmd_afsosd(char *myVersion, char **versionstring,
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "check also volumes without osdpolicy");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("listobjects", ListObjects, NULL,
+    ts = cmd_CreateSyntax("listobjects", ListObjects, NULL, 0,
 			  "list all objects on specified osd.");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, 0, "osd or policy id");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
@@ -1122,7 +1122,7 @@ init_voscmd_afsosd(char *myVersion, char **versionstring,
     cmd_AddParm(ts, "-wiped", CMD_FLAG, CMD_OPTIONAL, "only wiped files");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("salvage", SalvageOSD, NULL,
+    ts = cmd_CreateSyntax("salvage", SalvageOSD, NULL, 0,
                           "sanity check for a volume.");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
@@ -1133,7 +1133,7 @@ init_voscmd_afsosd(char *myVersion, char **versionstring,
     cmd_AddParm(ts, "-localinst", CMD_SINGLE, CMD_OPTIONAL, "number of volume instances in RW-partition");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("traverse", Traverse, NULL,
+    ts = cmd_CreateSyntax("traverse", Traverse, NULL, 0,
                           "gather file statistic from server.");
     cmd_AddParm(ts, "-server", CMD_LIST, 0, "machine names");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID");

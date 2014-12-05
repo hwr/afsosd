@@ -3973,7 +3973,7 @@ int main (int argc, char **argv)
         }
     } while(code);
 
-    ts = cmd_CreateSyntax("createobject", create, (void *)NULL,
+    ts = cmd_CreateSyntax("createobject", create, (void *)NULL, 0,
 			  "create object in existing volume subtree");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
@@ -3983,7 +3983,7 @@ int main (int argc, char **argv)
 	        "0 for /vicepa, 1 for /vicepb ...");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("incrlinkcount", incrlc_obj, NULL,
+    ts = cmd_CreateSyntax("incrlinkcount", incrlc_obj, NULL, 0,
 			  "increment link count of an objekt");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
@@ -3993,7 +3993,7 @@ int main (int argc, char **argv)
 	        "0 for /vicepa, 1 for /vicepb ...");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("decrlinkcount", decrlc_obj, NULL,
+    ts = cmd_CreateSyntax("decrlinkcount", decrlc_obj, NULL, 0,
 			  "decrement link count of an objekt");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
@@ -4003,7 +4003,7 @@ int main (int argc, char **argv)
 	        "0 for /vicepa, 1 for /vicepb ...");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("volumes", volumes, NULL,
+    ts = cmd_CreateSyntax("volumes", volumes, NULL, 0,
 			  "list volumes");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
@@ -4013,7 +4013,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("objects", objects, NULL, "list objetcs of a volume");
+    ts = cmd_CreateSyntax("objects", objects, NULL, 0, "list objetcs of a volume");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume-id");
@@ -4025,7 +4025,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("write", write_obj, NULL, "write data into an object");
+    ts = cmd_CreateSyntax("write", write_obj, NULL, 0, "write data into an object");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4038,7 +4038,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-rxdebug", CMD_SINGLE, CMD_OPTIONAL, "rxdebug file");
 
-    ts = cmd_CreateSyntax("pswrite", pswrite_obj, NULL, "write data into an object");
+    ts = cmd_CreateSyntax("pswrite", pswrite_obj, NULL, 0, "write data into an object");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4053,7 +4053,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-nstripes", CMD_SINGLE, CMD_OPTIONAL, "number of stripes");
     cmd_AddParm(ts, "-rxdebug", CMD_SINGLE, CMD_OPTIONAL, "rxdebug file");
 
-    ts = cmd_CreateSyntax("read", read_obj, NULL, "read data from an object");
+    ts = cmd_CreateSyntax("read", read_obj, NULL, 0, "read data from an object");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4066,7 +4066,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-rxdebug", CMD_SINGLE, CMD_OPTIONAL, "rxdebug file");
 
-    ts = cmd_CreateSyntax("psread", psread_obj, NULL,
+    ts = cmd_CreateSyntax("psread", psread_obj, NULL, 0,
 			  "pseudo striped read data from an object");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
@@ -4082,7 +4082,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-nstripes", CMD_SINGLE, CMD_OPTIONAL, "number of stripes");
     cmd_AddParm(ts, "-rxdebug", CMD_SINGLE, CMD_OPTIONAL, "rxdebug file");
 
-    ts = cmd_CreateSyntax("examine", examine, NULL, "examine single object");
+    ts = cmd_CreateSyntax("examine", examine, NULL, 0, "examine single object");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or server name or IP-address");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4098,7 +4098,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("md5sum", md5sum, NULL, "get md5 sum");
+    ts = cmd_CreateSyntax("md5sum", md5sum, NULL, 0, "get md5 sum");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or name or IP-address of server");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4107,7 +4107,7 @@ int main (int argc, char **argv)
 	        "0 for /vicepa, 1 for /vicepb ...");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("listosds", ListOsds, NULL, "list osds");
+    ts = cmd_CreateSyntax("listosds", ListOsds, NULL, 0, "list osds");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-noresolv", CMD_FLAG, CMD_OPTIONAL,
 	        "don't resolve ip-adresses");
@@ -4124,7 +4124,7 @@ int main (int argc, char **argv)
 	        "specify columns of the table");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "osddbserver to contact");
 
-    ts = cmd_CreateSyntax("createosd", CreateOsd, NULL, "create osd entry in osddb");
+    ts = cmd_CreateSyntax("createosd", CreateOsd, NULL, 0, "create osd entry in osddb");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "osd id");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "osd name");
     cmd_AddParm(ts, "-ip", CMD_SINGLE, CMD_OPTIONAL, "IP address");
@@ -4143,7 +4143,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("setosd", SetOsd, NULL, "set fields in osddb");
+    ts = cmd_CreateSyntax("setosd", SetOsd, NULL, 0, "set fields in osddb");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "osd id");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "osd name");
     cmd_AddParm(ts, "-ip", CMD_SINGLE, CMD_OPTIONAL, "IP address");
@@ -4165,23 +4165,23 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "");
 
-    ts = cmd_CreateSyntax("deleteosd", DeleteOsd, NULL, "delete osd entry in odddb");
+    ts = cmd_CreateSyntax("deleteosd", DeleteOsd, NULL, 0, "delete osd entry in odddb");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "osd id");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("osd", ShowOsd, NULL, "show single osddb entry");
+    ts = cmd_CreateSyntax("osd", ShowOsd, NULL, 0, "show single osddb entry");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "osd id");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "show all OSDs");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "osddbserver to contact");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("fetchqueue", Fetchq, NULL, "show fetch requests");
+    ts = cmd_CreateSyntax("fetchqueue", Fetchq, NULL, 0, "show fetch requests");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "osd name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("addserver", AddServer, NULL, "create server entry in osddb");
+    ts = cmd_CreateSyntax("addserver", AddServer, NULL, 0, "create server entry in osddb");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "ip address");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "osd name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_OPTIONAL, "group name (max 3 char)");
@@ -4190,11 +4190,11 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("servers", ShowServer, NULL, "show server osddb entry");
+    ts = cmd_CreateSyntax("servers", ShowServer, NULL, 0, "show server osddb entry");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "server name or ip-address");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("deleteserver", DeleteServer, NULL, "delete a server entry");
+    ts = cmd_CreateSyntax("deleteserver", DeleteServer, NULL, 0, "delete a server entry");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "server name or ip-address");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
@@ -4205,7 +4205,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("addpolicy", AddPolicy, NULL, "add a policy");
+    ts = cmd_CreateSyntax("addpolicy", AddPolicy, NULL, 0, "add a policy");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "policy number");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED, "short name for policy");
     cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_REQUIRED,
@@ -4216,7 +4216,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("policies", ShowPolicy, NULL, "show policy osddb entry");
+    ts = cmd_CreateSyntax("policies", ShowPolicy, NULL, 0, "show policy osddb entry");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "policy id");
     cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "use human readable notation");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "use verbose notation, implies -human");
@@ -4225,30 +4225,30 @@ int main (int argc, char **argv)
 	"insert used policies in place of use() rules");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("deletepolicy", DeletePolicy, NULL, "delete a policy");
+    ts = cmd_CreateSyntax("deletepolicy", DeletePolicy, NULL, 0, "delete a policy");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "policy id (number)");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("threads", Threads, NULL, "show active threads in osd server");
+    ts = cmd_CreateSyntax("threads", Threads, NULL, 0, "show active threads in osd server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "name or IP-address");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("whichvariables", ListVariables, NULL, "get list of variables");
+    ts = cmd_CreateSyntax("whichvariables", ListVariables, NULL, 0, "get list of variables");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "name or IP-address");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("getvariable", Variable, NULL, "get rxosd variable");
+    ts = cmd_CreateSyntax("getvariable", Variable, NULL, 0, "get rxosd variable");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "name or IP-address");
     cmd_AddParm(ts, "-variable", CMD_SINGLE, CMD_REQUIRED, "name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("setvariable", Variable, NULL, "set rxosd variable");
+    ts = cmd_CreateSyntax("setvariable", Variable, NULL, 0, "set rxosd variable");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "name or IP-address");
     cmd_AddParm(ts, "-variable", CMD_SINGLE, CMD_REQUIRED, "name");
     cmd_AddParm(ts, "-value", CMD_SINGLE, CMD_REQUIRED, "value");
@@ -4256,7 +4256,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 	        "get ticket from server key-file ");
 
-    ts = cmd_CreateSyntax("wipecandidates", WipeCand, NULL,
+    ts = cmd_CreateSyntax("wipecandidates", WipeCand, NULL, 0,
 		"get candidates for wipeing");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 		"osd or name or IP-address of server");
@@ -4272,7 +4272,7 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "get ticket from server key-file");
 
 
-    ts = cmd_CreateSyntax("statistic", Statistic, NULL, "get rpc statistic");
+    ts = cmd_CreateSyntax("statistic", Statistic, NULL, 0, "get rpc statistic");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 		"osd or name or IP-address of server");
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "all counters to 0");
@@ -4281,14 +4281,14 @@ int main (int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL,
 				"show tranfer rates around the clock");
 
-    ts = cmd_CreateSyntax("osddbstatistic", OsddbStatistic, NULL,
+    ts = cmd_CreateSyntax("osddbstatistic", OsddbStatistic, NULL, 0,
 		"get rpc statistic for osddb");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "name or IP-address of server");
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "all counters to 0");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("harddelete", hard_delete, NULL, "delete old unlinked files");
+    ts = cmd_CreateSyntax("harddelete", hard_delete, NULL, 0, "delete old unlinked files");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or server name or IP-address");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_OPTIONAL,
@@ -4301,7 +4301,7 @@ int main (int argc, char **argv)
 	        "get ticket from server key-file ");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("rmfetchentry", remove_fetch, NULL, "remove entry from fetch queue");
+    ts = cmd_CreateSyntax("rmfetchentry", remove_fetch, NULL, 0, "remove entry from fetch queue");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
 	        "osd or server name or IP-address");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
@@ -4310,7 +4310,7 @@ int main (int argc, char **argv)
 	        "get ticket from server key-file ");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("relink", relinkCmd, NULL, "restore an unlinked file");
+    ts = cmd_CreateSyntax("relink", relinkCmd, NULL, 0, "restore an unlinked file");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
                 "osd or server name or IP-address");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_OPTIONAL,
@@ -4320,7 +4320,7 @@ int main (int argc, char **argv)
                 "get ticket from server key-file ");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("inventory", inventoryCmd, NULL, "list contents of OSD");
+    ts = cmd_CreateSyntax("inventory", inventoryCmd, NULL, 0, "list contents of OSD");
     cmd_AddParm(ts, "-osd", CMD_SINGLE, CMD_REQUIRED,
                 "osd or server name or IP-address");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_OPTIONAL,
