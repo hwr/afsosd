@@ -757,7 +757,14 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 
     code = icreate(lh, part, p1, p2, p3, p4, 0, &fd, &ino);
     if (fd != INVALID_FD) {
-        close(fd);
+        IHandle_t tmp;
+        tmp.ih_dev = volutil_GetPartitionID(part);
+        if (tmp.ih_dev == hsmDev && p2 != NAMEI_VNODESPECIAL) {
+            tmp.ih_ops = ih_hsm_opsPtr;
+        } else {
+    	    tmp.ih_ops = &ih_namei_ops;
+        }
+        (tmp.ih_ops->close)(fd);
     }
     return (code || (fd == INVALID_FD)) ? (Inode) - 1 : ino;
 }
@@ -1010,9 +1017,12 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, rxosd_IHandle_t *hTarget)
     namei_HandleToName(&nameTarget, hTarget);
 
     (hLink->ih_ops->unlink)(nameLink.n_path);
-    if (hTarget->ih_ops->hardlink)
+    if (hTarget->ih_ops->hardlink) {
         code = (hTarget->ih_ops->hardlink)(nameTarget.n_path, nameLink.n_path);
-    else
+	if (code)
+	    ViceLog(0, ("namei_replace_file_by_hardlink failed with %d for %s to %s\n",
+			code, nameTarget.n_path, nameLink.n_path));
+    } else
         code = EIO;
     return code;
 }
