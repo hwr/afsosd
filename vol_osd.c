@@ -1719,7 +1719,7 @@ check_and_flush_metadata(struct Volume *vp, struct VnodeDiskObject *vnode,
 			afs_uint64 newpartid, newobjid;
 			newpartid = (o->part_id & 0xffffffff00000000L)
 					 | V_parentId(vp);
-			newobjid = o->obj_id;
+			newobjid = o->obj_id & TAGBITSMASK; /* clear tag bits */
 	        	code = rxosd_hardlink(o->osd_id, o->part_id, o->obj_id,
 					newpartid, o->obj_id, &newobjid);
 			if (code) {
@@ -7015,9 +7015,9 @@ osd_split_objects(Volume *vol, Volume *newvol, struct VnodeDiskObject *vd,
 		afs_uint64 newpartid, newobjid;
 		newpartid = o->part_id & 0xffffffff00000000LL;
 		newpartid |= V_parentId(newvol);
-		newobjid = o->obj_id;
+		newobjid = o->obj_id & TAGBITSMASK; /* clear tag bits */
 	        code = rxosd_hardlink(o->osd_id, o->part_id, o->obj_id,
-					newpartid, o->obj_id, &newobjid);
+					newpartid, newobjid, &newobjid);
 		if (code)
 		    goto bad;
 		o->part_id = newpartid;
