@@ -15,8 +15,14 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CFLAGS = -g -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith
 
+CCRULEHSM=${CC} ${HSM_INC} ${SHLIBHSMCFLAGS} -o $@ -c $<
+
+HSM_LIB=@HSM_LIB@
+HSM_INC=@HSM_INC@
 LIBAFSOSDMAJOR=1
 LIBAFSOSDMINOR = @LIBAFSOSDMINOR@
+LIBHPSSMAJOR = 1
+LIBHPSSMINOR = 1
 
 MODULE_CFLAGS = ${SHLIB_CFLAGS} -I${srcdir}/../config
 
@@ -45,7 +51,6 @@ rxosdobjects = \
 	dirpath.o \
 	volparse.o \
 	flipbase64.o \
-	softsig.o \
 	devname.o \
 	common.o \
 	rxosd_ihandle.o \
@@ -69,6 +74,13 @@ LIBS= \
      $(top_builddir)/src/ubik/liboafs_ubik.la \
      $(top_builddir)/src/util/liboafs_util.la
 
+HPSSLIB=${TOP_LIBDIR}/util.a
+
+SERVERLIBS =    ${TOP_LIBDIR}/libubik_pthread.a \
+		${TOP_LIBDIR}/libafsauthent.a \
+		${TOP_LIBDIR}/libcmd.a \
+		${TOP_LIBDIR}/libafsrpc.a \
+		${TOP_LIBDIR}/libafsutil.a
 RXOSDOBJS = \
 	rxosd.cs.o \
 	rxosd.xdr.o
@@ -181,7 +193,10 @@ LIBAFSOSD = libafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
 LIBDAFSOSD = libdafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
 LIBCAFSOSD = libcafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
 
-all: rxosd osd osddbserver ${LIBAFSOSD} ${LIBDAFSOSD} ${LIBCAFSOSD} fs readabyte
+LIBAFSHPSS = libafshpss.${SHLIB_SUFFIX}.${LIBHPSSMAJOR}.${LIBHPSSMINOR}
+
+all: rxosd osd osddbserver ${LIBAFSOSD} ${LIBDAFSOSD} ${LIBCAFSOSD} fs readabyte \
+	${LIBAFSHPSS}
 
 ${TOP_LIBDIR}/${LIBAFSOSD}: ${LIBAFSOSD}
 	../config/shlib-install -d ${TOP_LIBDIR} \
@@ -510,9 +525,6 @@ flipbase64.o: ${UTIL}/flipbase64.c
 dirpath.o: ${UTIL}/dirpath.c
 	${AFS_CCRULE} ${UTIL}/dirpath.c
 
-softsig.o: ${UTIL}/softsig.c
-	${AFS_CCRULE} ${UTIL}/softsig.c
-
 # lwp stuff
 
 lock.o: ${LWP}/lock.c
@@ -550,8 +562,57 @@ osddbserver: osddbserver.o o_libafsosd.o ${LIBS}
 	$(LT_LDRULE_static) osddbserver.o o_libafsosd.o ${LIBS} \
 		${TOP_LIBDIR}/libafshcrypto.a $(LIB_roken) -ldl ${XLIBS}
 
+linkcunts.o: ${srcdir}/linkcounts.c
+	${AFS_CCRULE}
+
+linkcounts: linkcounts.o
+	$(LT_LDRULE_static) linkcounts.o ${LIBS} ${TOP_LIBDIR}/libafshcrypto.a ${XLIBS}
+
+# HPSS stuff
+
+rxosd_hpss.o: rxosd_hpss.c rxosd_hsm.h
+	${AFS_CCRULE} -DBUILDING_RXOSD ${HSM_INC} ${srcdir}/rxosd_hpss.c
+
+l_libafshsm.c: ${srcdir}/libafshsm.c
+	ln -sf $? $@
+
+l_libafshsm.o: ${srcdir}/libafshsm.c ${srcdir}/rxosd_hsm.h \
+		${srcdir}/ourHpss_inline2.h ${srcdir}/ourHpss.h
+	${AFS_CCRULE} -DBUILD_SHLIBAFSHSM ${HSM_INC} ${srcdir}/libafshsm.c
+
+${LIBAFSHPSS}: rxosd_hpss.o l_libafshsm.o libafshpss.map
+	../config/shlib-build -d $(srcdir) -l libafshpss \
+		-M ${LIBHPSSMAJOR} -m ${LIBHPSSMINOR} -- \
+		rxosd_hpss.o l_libafshsm.o ${MT_LIBS}
+
+hpss_read.o: ${srcdir}/hpss_read.c hpss_inline.h
+	${CCRULEHSM} ${HSM_INC}
+
+pss_read: hpss_read.o
+	${CC} ${LDFLAGS} -o hpss_read hpss_read.o ../rxkad/md5.o ${HPSSLIB} ${HSM_LIB}
+
+hpss_restore.o: ${srcdir}/hpss_restore.c hpss_inline.h
+	${CCRULEHSM} ${HSM_INC}
+
+hpss_restore: hpss_restore.o
+	${CC} ${LDFLAGS} -o hpss_restore hpss_restore.o ${HPSSLIB} ${HSM_LIB}
+
+hpss_write.o: ${srcdir}/hpss_write.c hpss_inline.h
+	${CCRULEHSM} ${HSM_INC}
+
+hpss_write: hpss_write.o
+	${CC} ${LDFLAGS} -o hpss_write hpss_write.o ../rxkad/md5.o ${HPSSLIB} ${HSM_LIB}
+
+hpss_tapeinfo.o: ${srcdir}/hpss_tapeinfo.c hpss_inline.h
+	${CCRULEHSM} ${HSM_INC}
+
+hpss_tapeinfo: hpss_tapeinfo.o
+	${CC} ${LDFLAGS} -o hpss_tapeinfo hpss_tapeinfo.o ${HPSSLIB} ${HSM_LIB}
+
+	
+	
 clean:
-	$(RM) -f *.o libafsosd.so* libdafsosd.so* libcafsosd.so* \
+	$(RM) -f *.o libafsosd.so* libdafsosd.so* libcafsosd.so* libafshpss.so* \
 		 *.ss.c *.cs.c *.xdr.c  *int.h osddb.h rxosd.h vol_osd.h  \
 		 fs_rxosd_common.h vicedosd.h volserosd.h policies.tab.c \
 		volser.h osdmetadata fs osd rxosd readabyte \

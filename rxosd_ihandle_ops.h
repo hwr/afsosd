@@ -6,6 +6,7 @@
 #include <dirent.h>
 struct afs_stat;
 struct afs_statfs;
+struct statvfs;
 struct afs_statvfs;
 
 struct ih_posix_ops {
@@ -29,7 +30,7 @@ struct ih_posix_ops {
     int         (*closedir)(DIR *);
     int         (*hardlink)(const char*, const char*);
 #if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
-    int         (*statvfs)(const char *, struct afs_statvfs *);
+    int         (*statvfs)(const char *, struct statvfs *);
 #else
     int         (*statfs)(const char *, struct afs_statfs *);
 #endif

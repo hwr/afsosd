@@ -156,7 +156,10 @@ struct osd_infoList;
 #include "osddbuser.h"
 #include "vicedosd.h"
 #include <afs/audit.h>
-#include <afs/softsig.h>
+#include <opr/lock.h>
+#include <opr/proc.h>
+#include <opr/softsig.h>
+#include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #include <hcrypto/md5.h>
 
 
@@ -182,6 +185,7 @@ struct osd_infoList;
 #define SNPRINTF snprintf
 private char *shortbuffer = "***buffer too short***";
 private char *notspecified = "no object spefified";
+static struct logOptions logopts;
 
 static char *
 sprint_oparmT10(struct oparmT10 *o, char *buf, afs_int32 len)
@@ -426,6 +430,8 @@ CopyOnWrite(struct rx_call *call, struct oparmT10 *o, afs_uint64 offs,
 int o_cache_used = 0;
 int o_cache_entries = 0;
 int o_MaxCacheSize = 0;
+
+extern void TransferRate(void);
 
 afs_uint64 total_bytes_rcvd = 0;
 afs_uint64 total_bytes_sent = 0;
@@ -7164,7 +7170,10 @@ main(int argc, char *argv[])
     memset(&stats, 0, sizeof(stats));
     memset(&dontUnlinkDev, -1, sizeof(dontUnlinkDev));
     code = ConstructLocalLogPath((const char *)"RxosdLog", (char **)&logpath);
-    OpenLog(logpath);
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = logpath;
+    OpenLog(&logopts);
     SetupLogSignals();
 
     for (i=1; i<argc; i++) {
@@ -7316,8 +7325,9 @@ main(int argc, char *argv[])
     osi_Assert(pthread_create(&serverPid, NULL, CheckFetchProc, &fiveminutes) ==0);
     registerthread(serverPid, "ck_fetchq");
 
-    softsig_init();
-    softsig_signal(SIGQUIT, ShutDown_Signal);
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+    opr_softsig_Register(SIGQUIT, ShutDown_Signal);
     FT_GetTimeOfDay(&statisticStart, 0);
     rx_StartServer(1);	/* now start handling requests */
     return 0;

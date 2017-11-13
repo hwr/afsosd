@@ -2406,6 +2406,7 @@ OSDDB_5_minuteCheck(void *unused)
 	    sleepseconds += 300;
         sleep(sleepseconds);
         if (ubeacon_AmSyncSite()) {
+	    now = FT_ApproxTime(); /* update our time */
             if (!osds.OsdList_val) {
                 code = SOSDDB_OsdList(0, &osds);
                 if (!code) { /* initialize timeStamps */

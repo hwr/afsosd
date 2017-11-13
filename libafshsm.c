@@ -51,7 +51,7 @@ struct afs_ops_v0 {
     int (*BufioGets) (bufio_p bp, char *buf, int len);
     int (*BufioClose) (bufio_p bp);
     const char *(*getDirPath) (afsdir_id_t string_id);
-    void (*AssertionFailed) (char *file, int line);
+    void (*AssertionFailed) (const char *file, int line);
 };
 struct afs_ops_v0 afs_ops_v0;
 static struct afs_ops_v0 *afs_ops = NULL;
@@ -99,13 +99,13 @@ int load_libafshsm(afs_int32 interface, char *initroutine, void *inrock, void *o
 	version = LIBAFSHPSS_VERSION;     /* compiled in server binary */
         sprintf(libname, "%s/%s.%d.%d",
 		AFSDIR_SERVER_BIN_DIRPATH,
-		"libafshpss.so", 0, version);
+		"libafshpss.so", 1, version);
 	break;
     case DCACHE_INTERFACE:
 	version = LIBAFSDCACHE_VERSION;     /* compiled in server binary */
         sprintf(libname, "%s/%s.%d.%d",
 		AFSDIR_SERVER_BIN_DIRPATH,
-		"libafsdcache.so", 0, version);
+		"libafsdcache.so", 1, version);
 		break;
     default:
 	ViceLog(0,("Unknown interface number %d\n", interface));
@@ -192,13 +192,12 @@ libafshsm_init(afs_int32 interface, void *inrock, void **outrock,
 {
     afs_int32 version = LIBAFSHPSS_VERSION;	/* compiled in shared library */
     struct ops_ptr *in = (struct ops_ptr *)inrock;
-    void *libhpssHandle;
     afs_int32 code = 0;
 
     if (interfaceVersion != version)
 	return EINVAL;
     if (interface == HPSS_INTERFACE && outrock) {
-	code = fill_ourHpss(outrock);
+	code = fill_ourHpss((struct ourInitParms *)outrock);
     }
     afs_ops = in->afs_ops;
     return code;

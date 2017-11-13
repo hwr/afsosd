@@ -111,6 +111,20 @@ struct vos_data {
 };
 struct vos_data *vos_data;
 
+int
+PrintDiagnostics(char *astring, afs_int32 acode)
+{
+    if (acode == EACCES) {
+	fprintf(STDERR,
+		"You are not authorized to perform the 'vos %s' command (%d)\n",
+		astring, acode);
+    } else {
+	fprintf(STDERR, "Error in vos %s command.\n", astring);
+	PrintError("", acode);
+    }
+    return 0;
+}
+
 #define MAXOSDS 1024
 
 int
@@ -1077,6 +1091,127 @@ Traverse(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
+static int
+SplitVolume(struct cmd_syndesc *as, void *arock)
+{
+    struct nvldbentry entry;
+    volintInfo *pntr = (volintInfo *) 0;
+    afs_uint32 volid;
+    afs_int32 i, j, code, err;
+    afs_uint32 newvolid = 0, dirvnode = 0;
+    struct rx_connection *tcon;
+
+    volid = vsu_GetVolumeID(as->parms[0].items->data, *vos_data->cstruct, &err);   /* -id */
+    if (volid == 0) {
+	if (err)
+	    PrintError("", err);
+	else
+	    fprintf(STDERR, "Unknown volume ID or name '%s'\n",
+		    as->parms[0].items->data);
+	return EINVAL;
+    }
+    sscanf(as->parms[2].items->data, "%u", &dirvnode);
+    if (!(dirvnode & 1)) {
+	fprintf(STDERR, "Invalid directory vnode number %s.\n",
+		as->parms[2].items->data);
+	return EINVAL;
+    }
+    code = VLDB_GetEntryByID(volid, -1, &entry);
+    if (code) {
+	fprintf(STDERR,
+		"Could not fetch the entry for volume number %lu from VLDB \n",
+		(unsigned long)(volid));
+	return code;
+    }
+    for (i = 0; i < entry.nServers; i++) {
+	if (entry.serverFlags[i] & VLSF_RWVOL)
+	    break;
+    }
+    if (i >= entry.nServers) {
+	fprintf(stderr, "RW-volume not found in VLDB\n");
+	return EIO;
+    }
+    code = UV_ListOneVolume(htonl(entry.serverNumber[i]),
+		        entry.serverPartition[i], volid, &pntr);
+    if (code) {
+	return code;
+    }
+
+    if (strlen(as->parms[1].items->data) > 22) {
+	fprintf(stderr, "New volume name is too long: %s, aborting.\n",
+		as->parms[1].items->data);
+	return EINVAL;
+    }
+    code = ubik_VL_SetLock(*vos_data->cstruct, 0, volid, RWVOL, VLOP_SPLIT);
+    if (code) {
+	if (code == 363542) {
+            /* Old vldebserver doesn't understand VLOP_SALVAGE, use VLOP_DUMP instead */
+	    code = ubik_VL_SetLock(*vos_data->cstruct, 0, volid, RWVOL, VLOP_DUMP);
+        }
+        if (code) {
+	    fprintf(STDERR,
+		    "Could not lock volume %lu, aborting\n",
+		    (unsigned long)(volid));
+	    return (code);
+	}
+    }
+    code =
+	UV_CreateVolume2(htonl(entry.serverNumber[i]),
+			entry.serverPartition[i], as->parms[1].items->data,
+			pntr->maxquota, 0, 0, pntr->osdPolicy,
+			pntr->filequota, &newvolid);
+    if (code) {
+	PrintDiagnostics("create", code);
+	ubik_VL_ReleaseLock(*vos_data->cstruct, 0, volid, -1,
+				(LOCKREL_OPCODE | LOCKREL_AFSID |
+				 LOCKREL_TIMESTAMP));
+	return code;
+    }
+    rx_SetRxDeadTime(60 * 10);
+    for (j = 0; j < MAXSERVERS; j++) {
+	struct rx_connection *rxConn = ubik_GetRPCConn(*vos_data->cstruct, j);
+	if (rxConn == 0)
+	    break;
+	rx_SetConnDeadTime(rxConn, *vos_data->rx_connDeadTime);
+	if (rx_ServiceOf(rxConn))
+	    rx_ServiceOf(rxConn)->connDeadTime = *vos_data->rx_connDeadTime;
+    }
+
+    tcon = UV_Bind(htonl(entry.serverNumber[i]), AFSCONF_VOLUMEPORT);
+    if (tcon) {
+	struct rx_call *call = rx_NewCall(tcon);
+	code = StartAFSVolSplitVolume(call, volid, newvolid, dirvnode,
+		 *vos_data->verbose);
+	if (!code) {
+	    char line[256];
+	    char *p = line;
+	    afs_int32 bytes;
+	    while (1) {
+		bytes = rx_Read(call, p, 1);
+		if (bytes <= 0)
+		    break;
+		if (*p == '\n') {
+		    p++;
+		    *p = 0;
+		    printf("%s", line);
+		    p = line;
+		} else {
+		    if (*p == 0)
+			break;
+		    p++;
+		}
+	    }
+	    code = rx_EndCall(call, 0);
+	    if (code)
+		fprintf(stderr, "RPC failed with code %d\n", code);
+	}
+    }
+    ubik_VL_ReleaseLock(*vos_data->cstruct, 0, volid, -1,
+				(LOCKREL_OPCODE | LOCKREL_AFSID |
+				 LOCKREL_TIMESTAMP));
+    return code;
+}
+
 struct vol_data_v0 vol_data_v0;
 
 int
@@ -1131,6 +1266,13 @@ init_voscmd_afsosd(char *myVersion, char **versionstring,
     cmd_AddParm(ts, "-ignorelinkcounts", CMD_FLAG, CMD_OPTIONAL, "ignore linkcounts whenupdating the volume. Mutually exclusive with -decrement.");
     cmd_AddParm(ts, "-instances", CMD_SINGLE, CMD_OPTIONAL, "global number of volume instances");
     cmd_AddParm(ts, "-localinst", CMD_SINGLE, CMD_OPTIONAL, "number of volume instances in RW-partition");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("splitvolume", SplitVolume, NULL, 0,
+                          "split a volume at a certain directory.");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "name of the new volume");
+    cmd_AddParm(ts, "-dirvnode", CMD_SINGLE, 0, "vnode number of directory where the volume should be split");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("traverse", Traverse, NULL, 0,
