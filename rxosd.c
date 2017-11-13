@@ -4638,11 +4638,10 @@ hardlink(struct rx_call *call, afs_uint64 from_part,
 
     code = create(call, to_part, to_id, obj_id);
     if (code) {
-	ViceLog(0,("hardlink: couldn't create new object %u.%u.%u\n",
-			to_vid, to_vnode, to_unique));
+	ViceLog(0,("hardlink: couldn't create new object %u.%u.%u on lun %u\n",
+			to_vid, to_vnode, to_unique, to_lun));
 	return EIO;
     }
-
     from_oh = oh_init(from_part, from_id);
     if (from_oh == NULL) {
         ViceLog(0,("hardlink: oh_init failed for %u.%u.%u tag %d\n",
