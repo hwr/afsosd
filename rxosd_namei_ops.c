@@ -944,6 +944,9 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
             else if (th->ih_ops->stat64(name.n_path, &st) == 0) {
                 if (st.st_size == 0) /* don't bother with empty file */
                     code = th->ih_ops->unlink(name.n_path);
+                else if (st.st_nlink > 1)  
+		    /* after vos split during release of the old volume */
+                    code = th->ih_ops->unlink(name.n_path);
                 else {
                     sprintf((char *)&unlinkname, "%s-unlinked-%d%02d%02d",
                         (char *)&name.n_path, TimeFields->tm_year + 1900,
