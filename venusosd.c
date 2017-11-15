@@ -195,7 +195,7 @@ InitializeCBService_LWP(u_short port)
         fprintf(stderr,"rxnull_NewServerSecurityObject failed for callback service.\n");
         exit(1);
     }
-    CBService = rx_NewService(port, 1, "afs", &CBsecobj, 1,
+    CBService = rx_NewService(0, 1, "afs", &CBsecobj, 1,
                               RXAFSCB_ExecuteRequest);
     if (!CBService) {
         fprintf(stderr,"rx_NewService failed for callback service.\n");
