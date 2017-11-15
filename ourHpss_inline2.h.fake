@@ -1,0 +1,213 @@
+#include <sys/statfs.h>
+#include <dirent.h>
+#include "ourHpss.h"
+
+int dummysetlogin(char *a, int b, int c, int d, void *e)
+{
+    return 0;
+}
+
+void dummy(void)
+{
+}
+
+int dummygetattr(char *path, int b, int c, void *d)
+{
+typedef unsigned char uchar;
+#include "hpss_api.h"
+    struct hpss_xfileattr *a = (struct hpss_xfileattr *)d;
+    afs_int32 i, code;
+    bf_sc_attrib_t  *scattr_ptr;
+    struct stat64 tstat;
+
+    code = stat64(path, &tstat);
+    if (code) 
+	return code;
+    memset(d, 0, sizeof(struct hpss_xfileattr));
+    for(i=0; i<HPSS_MAX_STORAGE_LEVELS; i++) {
+	scattr_ptr = &a->SCAttrib[i];
+	if (i == 0) {
+	     scattr_ptr->Flags |= BFS_BFATTRS_DATAEXISTS_AT_LEVEL;
+	     scattr_ptr->Flags |= BFS_BFATTRS_LEVEL_IS_DISK;
+	     scattr_ptr->BytesAtLevel = tstat.st_size;
+	} else if (i == 1) {
+	     scattr_ptr->Flags |= BFS_BFATTRS_DATAEXISTS_AT_LEVEL;
+	     scattr_ptr->Flags |= BFS_BFATTRS_LEVEL_IS_TAPE;
+	     scattr_ptr->BytesAtLevel = tstat.st_size;
+	}
+    }
+    
+    return code;
+}
+
+struct ourHpss {
+    void *hpss_SetLoginCred;
+    void *hpss_PurgeLoginCred;
+    void *hpss_ClientAPIReset;
+    void *hpss_Open;
+    void *hpss_Close;
+    void *hpss_Opendir;
+    void *hpss_Readdir;
+    void *hpss_Closedir;
+    void *hpss_Stat;
+    void *hpss_Fstat;
+    void *hpss_FileGetXAttributes;
+    void *hpss_Statfs;
+    void *hpss_Read;
+    void *hpss_Write;
+    void *hpss_Ftruncate;
+    void *hpss_Lseek;
+    void *hpss_Mkdir;
+    void *hpss_Rmdir;
+    void *hpss_Chmod;
+    void *hpss_Chown;
+    void *hpss_Rename;
+    void *hpss_Link;
+    void *hpss_Unlink;
+};
+static struct ourHpss ourHpss;
+
+int
+fill_ourHpss(struct ourInitParms *p)
+{
+        int i, j;
+        char * error;
+	void *handle[MAX_HPSS_LIBS];
+	for (i=0; i<MAX_HPSS_LIBS; i++) {
+	    if (p->ourLibs[i] == NULL)
+		break;
+	    j = i;
+	    handle[i] = dlopen(p->ourLibs[i], RTLD_LAZY | RTLD_GLOBAL);
+	    if (!handle[i]) {
+                fprintf(stderr, "dlopen of %s failed: %s\n", p->ourLibs[i], dlerror());
+                return ENOENT;
+	    }
+            dlerror();      /* Clear any existing error */
+        }
+	i = j; 	/* last !=NULL entry: should be libhpss.so */
+        ourHpss.hpss_SetLoginCred = dummysetlogin;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_SetLoginCred failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_PurgeLoginCred = dummy;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_PurgeLoginCred failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_ClientAPIReset = dummy;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_ClientAPIReset failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Open = open;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Open failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Close = close;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Close failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Opendir = opendir;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Opendir failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Readdir = readdir;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Readdir failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Closedir = closedir;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Closedir failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Stat = stat64;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Stat failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Fstat = fstat64;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Fstat failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_FileGetXAttributes = dummygetattr;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_FileGetXAttributes failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Statfs = statfs64;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Statfs failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Read = read;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Read failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Write = write;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Write failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Ftruncate = ftruncate;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Ftruncate failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Lseek = lseek64;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Lseek failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Mkdir = mkdir;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Mkdir failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Rmdir = rmdir;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Rmdir failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Chmod = chmod;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Chmod failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Chown = chown;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Chown failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Rename = rename;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Rename failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Link = link;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Link failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        ourHpss.hpss_Unlink = unlink;
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_Unlink failed: %s\n", dlerror());
+            return ENOENT;
+        }
+#if 0
+        init = dlsym(handle[i], "hpss_SECReinitialize");
+        if ((error = dlerror()) != NULL)  {
+            fprintf(stderr, "dlsym for hpss_SECReinitialize failed: %s\n", dlerror());
+            return ENOENT;
+        }
+        (init)();
+#endif
+        *p->outrock = (void *)&ourHpss;
+        return 0;
+}

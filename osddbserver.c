@@ -91,6 +91,7 @@ extern int LogLevel;
 int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
 int rxMaxMTU = -1;
+int haveAlwaysSyncSite = 0;
 
 #define OSD_TIMEOUT	400
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
@@ -137,6 +138,7 @@ main(int argc, char *argv[])
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
     char *logpath;
+    struct logOptions logopts;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -212,23 +214,16 @@ main(int argc, char *argv[])
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
 	    rx_enableProcessRPCStats();
-#ifndef AFS_NT40_ENV
-	} else if (strcmp(argv[index], "-syslog") == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(argv[index], "-syslog=", 8) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(argv[index] + 8);
-#endif
 	} else if (strcmp(argv[index], "-ubikbuffers") == 0) {
 	    ubik_nBuffers = atoi(argv[++index]);
+	} else if (strcmp(argv[index], "-haveAlwaysSyncSite") == 0) {
+	    haveAlwaysSyncSite = 1;
 	} else {
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: osddbserver [-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-auditlog <log path>] "
-		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-ubikbuffers <n>]"
 		   "[-help]\n");
@@ -237,6 +232,7 @@ main(int argc, char *argv[])
 		   "[-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-haveAlwaysSyncSite] "
 		   "[-help]\n");
 #endif
 	    fflush(stdout);
@@ -259,11 +255,10 @@ main(int argc, char *argv[])
     }
     ConstructLocalPath("osddb", AFSDIR_SERVER_DB_DIRPATH, (char **)&osd_dbaseName);
 
-#ifndef AFS_NT40_ENV
-    serverLogSyslogTag = "osddb";
-#endif
     code = ConstructLocalLogPath("OSDLog", &logpath);
-    OpenLog(logpath);	/* set up logging */
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_filename = logpath;
+    OpenLog(&logopts);	/* set up logging */
     SetupLogSignals();
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);

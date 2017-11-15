@@ -3612,6 +3612,10 @@ hard_delete(struct cmd_syndesc *as, void *rock)
         }
 	flag |= HARD_DELETE_OLDER;
     }
+
+    if ((flag & WHOLE_VOLUME) && !(flag & HARD_DELETE_OLDER))
+	flag |= HARD_DELETE_EXACT; 
+
     scan_osd_or_host();
     GetConnection();
     code = RXOSD_hard_delete(Conn, &Oprm, packed, flag);

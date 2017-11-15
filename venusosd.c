@@ -155,7 +155,7 @@ void PrintDate(afs_uint32 *intdate)
     }
 }
 
-void PrintTime(afs_uint32 *intdate)
+void PrintTime(afs_uint32 intdate)
 {
     time_t date;
     char month[4];
@@ -166,8 +166,8 @@ void PrintTime(afs_uint32 *intdate)
                          "Sep", "Oct", "Nov", "Dec"};
     int i;
 
-    if (!*intdate) printf(" never       "); else {
-        date = *intdate;
+    if (!intdate) printf(" never       "); else {
+        date = intdate;
         timestring = ctime(&date);
         sscanf(timestring, "%s %s %d %d:%d:%d %d",
                 (char *)&weekday,
@@ -180,8 +180,9 @@ void PrintTime(afs_uint32 *intdate)
     }
     return;
 }
+
 void
-InitializeCBService_LWP(void)
+InitializeCBService_LWP(u_short port)
 {
     struct rx_securityClass *CBsecobj;
     struct rx_service *CBService;
@@ -213,6 +214,7 @@ InitializeCBService(void)
     pthread_attr_t tattr;
     int InitialCBPort;
     int CBPort;
+    u_short port;
 
     InitialCBPort = 7100;
     CBPort = InitialCBPort;
@@ -235,10 +237,11 @@ InitializeCBService(void)
         }
     }
     while(code);
+    port = CBPort;
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
     assert(pthread_create
-           (&CBServiceLWP_ID, &tattr, (void *)InitializeCBService_LWP, NULL) == 0);
+           (&CBServiceLWP_ID, &tattr, (void *)InitializeCBService_LWP, &port) == 0);
     sleep(1); /* to give InitializeCBService_LWP time to start */
 }
 
@@ -1003,7 +1006,7 @@ ListLine(AFSFetchStatus *Status, char *fname, char *what, AFSFid *fid)
             strcat(str, " ");
         printf(" %s ", str);
     } else
-        PrintTime(&Status->ClientModTime);
+        PrintTime(Status->ClientModTime);
     printf(" %s", fname);
     if (Status->FileType == SymbolicLink && what) {
         printf(" -> %s", what);
@@ -1834,6 +1837,421 @@ WipeCmd(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
+static afs_int32
+Threads(struct cmd_syndesc *as, void *unused)
+{
+    char *fname;
+    afs_int32 code, i;
+    char fidcmd = 0;
+    char *cell = 0;
+    struct ViceIoctl status;
+    struct FsCmdInputs * Inputs;
+    struct FsCmdOutputs * Outputs;
+    AFSFid *fid = 0;
+    afs_uint32 n;
+    struct hostent *thp;
+    afs_uint32 host;
+    struct rx_connection *conn;
+    struct cellLookup *cl;
+
+    if (as->name[0] == 'f')
+        fidcmd = 1;
+    if (as->parms[2].items)
+        cell = as->parms[2].items->data;
+    cl = FindCell(cell);
+    if (!cl) {
+        fprintf(stderr, "couldn't find cell %s\n",cell);
+        return -1;
+    }
+
+    InitPioctlParams(Inputs, Outputs, CMD_SHOWTHREADS);
+    if (as->parms[0].items && as->parms[1].items) {
+        fprintf(stderr," -server and -file parameters are mutual exclusive, aborted\n");
+        return EINVAL;
+    }
+    if (as->parms[0].items) {                   /* -server ... */
+        struct activecallList list;
+        InitializeCBService();
+        thp = hostutil_GetHostByName(as->parms[0].items->data);
+        if (!thp) {
+            fprintf(stderr, "host %s not found in host table.\n",
+                as->parms[0].items->data);
+            return 1;
+        } else
+            memcpy(&host, thp->h_addr, sizeof(afs_int32));
+        conn = rx_NewConnection(host, htons(AFSCONF_FILEPORT), 2,
+                cl->sc[cl->scIndex], cl->scIndex);
+        if (!conn) {
+            fprintf(stderr,"rx_NewConnection failed to server %s\n",
+                as->parms[0].items->data);
+            return -1;
+        }
+        list.activecallList_len = 0;
+        list.activecallList_val = NULL;
+        code = RXAFSOSD_Threads(conn, &list);
+        if (!code) {
+            char name[20];
+            for (i=0; i<list.activecallList_len; i++) {
+                char *opname;
+                struct activecall *w = &list.activecallList_val[i];
+                if (w->num & 0x80000000)
+                    opname = RXAFSOSD_TranslateOpCode(w->num & 0x7fffffff);
+                else
+                    opname = RXAFS_TranslateOpCode(w->num & 0x7fffffff);
+                if (!opname)
+                    sprintf(name, "%s", "unknown");
+                else
+                    sprintf(name, "%s", opname);
+                printf("rpc %5u %20s for %u.%u.%u since ",
+                        w->num & 0x7fffffff,
+                        name, w->volume, w->vnode, w->unique);
+                PrintTime(w->timeStamp);
+                printf(" from %u.%u.%u.%u\n",
+                        (w->ip >> 24) & 255,
+                        (w->ip >> 16) & 255,
+                        (w->ip >> 8) & 255,
+                         w->ip & 255);
+            }
+            return 0;
+        }
+        if (code) {
+            fprintf(stderr, "RXAFSOSD_FsCmd to %s returns %d\n",
+                                        as->parms[0].items->data, code);
+            return code;
+        }
+    } else {
+       fname = as->parms[1].items->data;
+        if (fidcmd) {
+            code = ScanVnode(fname, cell);
+            code = pioctl(cellFname, VIOC_FS_CMD, &status, 0);
+        } else
+            code = pioctl(fname, VIOC_FS_CMD, &status, 0);
+        if (code) {
+            errno = code;
+            perror("pioctl");
+            return code;
+        }
+    }
+#define MAXTHREADENTRIES MAXCMDINT32S >> 2
+    fid = (AFSFid *)&Outputs->int32s[MAXTHREADENTRIES];
+    n = Outputs->int64s[0];
+    printf("%d active threads found\n", n);
+    for (i=0; i<n; i++) {
+        char *opname = RXAFS_TranslateOpCode(Outputs->int32s[i]);
+        if ( opname )
+            printf("rpc %s on %u.%u from %u.%u.%u.%u\n",
+                        opname ? opname+6 : "Unknown",
+                        fid->Volume, fid->Vnode,
+                        fid->Unique >> 24 & 0xff,
+                        fid->Unique >> 16 & 0xff,
+                        fid->Unique >> 8 & 0xff,
+                        fid->Unique & 0xff);
+        else
+            printf("rpc %u on %u.%u from %u.%u.%u.%u\n",
+                        Outputs->int32s[i],
+                        fid->Volume,
+                        fid->Vnode,
+                        fid->Unique >> 24 & 0xff,
+                        fid->Unique >> 16 & 0xff,
+                        fid->Unique >> 8 & 0xff,
+                        fid->Unique & 0xff);
+        fid++;
+    }
+    if (Outputs->code != 0)
+        printf("Listing not complete!\n");
+    return code;
+}
+
+char *quarters[96] = {
+                  "00:00-00:15", "00:15-00:30", "00:30-00:45", "00:45-01:00",
+                  "01:00-01:15", "01:15-01:30", "01:30-01:45", "01:45-02:00",
+                  "02:00-02:15", "02:15-02:30", "02:30-02:45", "02:45-03:00",
+                  "03:00-03:15", "03:15-03:30", "03:30-03:45", "03:45-04:00",
+                  "04:00-04:15", "04:15-04:30", "04:30-04:45", "04:45-05:00",
+                  "05:00-05:15", "05:15-05:30", "05:30-05:45", "05:45-06:00",
+                  "06:00-06:15", "06:15-06:30", "06:30-06:45", "06:45-07:00",
+                  "07:00-07:15", "07:15-07:30", "07:30-07:45", "07:45-08:00",
+                  "08:00-08:15", "08:15-08:30", "08:30-08:45", "08:45-09:00",
+                  "09:00-09:15", "09:15-09:30", "09:30-09:45", "09:45-10:00",
+                  "10:00-10:15", "10:15-10:30", "10:30-10:45", "10:45-11:00",
+                  "11:00-11:15", "11:15-11:30", "11:30-11:45", "11:45-12:00",
+                  "12:00-12:15", "12:15-12:30", "12:30-12:45", "12:45-13:00",
+                  "13:00-13:15", "13:15-13:30", "13:30-13:45", "13:45-14:00",
+                  "14:00-14:15", "14:15-14:30", "14:30-14:45", "14:45-15:00",
+                  "15:00-15:15", "15:15-15:30", "15:30-15:45", "15:45-16:00",
+                  "16:00-16:15", "16:15-16:30", "16:30-16:45", "16:45-17:00",
+                  "17:00-17:15", "17:15-17:30", "17:30-17:45", "17:45-18:00",
+                  "18:00-18:15", "18:15-18:30", "18:30-18:45", "18:45-19:00",
+                  "19:00-19:15", "19:15-19:30", "19:30-19:45", "19:45-20:00",
+                  "20:00-20:15", "20:15-20:30", "20:30-20:45", "20:45-21:00",
+                  "21:00-21:15", "21:15-21:30", "21:30-21:45", "21:45-22:00",
+                  "22:00-22:15", "22:15-22:30", "22:30-22:45", "22:45-23:00",
+                  "23:00-23:15", "23:15-23:30", "23:30-23:45", "23:45-24:00"};
+
+#define OneDay (86400)         /* 24 hours' worth of seconds */
+
+static int
+Statistic(struct cmd_syndesc *as, void *unused)
+{
+    afs_int32 code, i;
+    afs_int32 reset = 0;
+    char *cell = 0;
+    viced_statList l;
+    afs_uint64 received, sent, t64;
+    afs_uint32 since;
+    char *unit[] = {"bytes", "kb", "mb", "gb", "tb"};
+    struct hostent *thp;
+    afs_uint32 host;
+    struct rx_connection *conn;
+    struct cellLookup *cl;
+    struct cmd_item *ti;
+    struct timeval now;
+    afs_uint32 days, hours, minutes, seconds, tsec;
+    struct viced_kbps kbpsrcvd, kbpssent;
+
+    if (as->parms[1].items)                                     /* -reset */
+        reset = 1;
+    if (as->parms[3].items)                                     /* -cell */
+        cell = as->parms[3].items->data;
+    cl = FindCell(cell);
+    if (!cl) {
+        fprintf(stderr, "couldn't find cell %s\n",cell);
+        return -1;
+    }
+    InitializeCBService();
+    for (ti = as->parms[0].items; ti; ti = ti->next) {
+        thp = hostutil_GetHostByName(ti->data);
+        if (!thp) {
+            fprintf(stderr, "host %s not found in host table.\n", ti->data);
+            return 1;
+        }
+        memcpy(&host, thp->h_addr, sizeof(afs_int32));
+        conn = rx_NewConnection(host, htons(AFSCONF_FILEPORT), 2,
+                cl->sc[cl->scIndex], cl->scIndex);
+        if (!conn) {
+            fprintf(stderr,"rx_NewConnection failed to server %s\n", ti->data);
+            continue;
+        }
+        l.viced_statList_len = 0;
+        l.viced_statList_val = 0;
+        code = RXAFSOSD_Statistic(conn, reset, &since, &received, &sent, &l,
+                &kbpsrcvd, &kbpssent);
+        if (code) {
+            fprintf(stderr, "RXAFSOSD_statistic to %s returns %d\n",
+                                        ti->data, code);
+            continue;
+        }
+        if (as->parms[2].items) {
+            struct timeval now;
+            struct tm *Timerfields;
+            time_t midnight;
+            int j, diff;
+
+            gettimeofday(&now, NULL);
+            midnight = (now.tv_sec/OneDay)*OneDay;
+            Timerfields = localtime(&midnight);
+            diff = (24 - Timerfields->tm_hour) << 2;
+
+            for (i=0; i<96; i++) {
+                j = i + diff + 1;
+                if (j < 0)
+                    j += 96;
+                if (j >= 96)
+                    j -= 96;
+                printf("%s %5u KB/s sent %5u KB/s received\n", quarters[i],
+                        kbpssent.val[j], kbpsrcvd.val[j]);
+            }
+        }
+
+        FT_GetTimeOfDay(&now, 0);
+        printf("Since ");
+        PrintTime(since);
+        seconds = tsec = now.tv_sec - since;
+        days = tsec / 86400;
+        tsec = tsec % 86400;
+        hours = tsec/3600;
+        tsec = tsec % 3600;
+        minutes = tsec/60;
+        tsec = tsec % 60;
+        printf(" (%u seconds == %u days, %u:%02u:%02u hours)\n",
+                        seconds, days, hours, minutes, tsec);
+        t64 = received;
+        i = 0;
+        while (t64>1023) {
+            t64 = t64 >> 10;
+            i++;
+        }
+        printf("Total number of bytes received %16llu %4llu %s\n", received,
+                    t64, unit[i]);
+        t64 = sent;
+        i = 0;
+        while (t64>1023) {
+            t64 = t64 >> 10;
+            i++;
+        }
+        printf("Total number of bytes sent     %16llu %4llu %s\n", sent,
+                    t64, unit[i]);
+        for (i=0; i < l.viced_statList_len; i++) {
+            char name[32];
+            char *opname = NULL;
+            if (l.viced_statList_val[i].rpc & 0x80000000)
+                opname = RXAFSOSD_TranslateOpCode(
+                        l.viced_statList_val[i].rpc & 0x7fffffff);
+            else
+                opname = RXAFS_TranslateOpCode(
+                        l.viced_statList_val[i].rpc & 0x7fffffff);
+            if (opname)
+                sprintf(name, "%s", opname);
+            else
+                sprintf(name, "unknown (rpc %u)", l.viced_statList_val[i].rpc & 0x7fffffff);
+            printf("%12llu %s\n", l.viced_statList_val[i].cnt, name);
+        }
+    }
+    return code;
+}
+
+#define NAMEI_VNODEMASK 0x3ffffff
+#define NAMEI_TAGSHIFT  26
+#define NAMEI_TAGMASK   63
+
+/* :FIXME: should be moved to a header file */
+extern void printlength(afs_uint64 length);
+
+static afs_int32
+ListVnode(struct cmd_syndesc *as, void *unused)
+{
+    struct cmd_item *nm_itemP;
+    char *fname;
+    afs_int32 code, verbose = 0, fid = 0;
+    char *cell = 0;
+    struct ViceIoctl status;
+    struct FsCmdInputs * Inputs;
+    struct FsCmdOutputs * Outputs;
+    afs_uint32 parent = 0;
+    afs_uint32 Vnode = 0;
+    /*afs_uint32 Unique = 0;*/
+
+    if (as->name[0] == 'f')
+        fid = 1;
+    InitPioctlParams(Inputs, Outputs, CMD_LISTDISKVNODE);
+
+    if (as->parms[1].items)
+        cell = as->parms[1].items->data;
+    for (nm_itemP = as->parms[0].items; nm_itemP; nm_itemP = nm_itemP->next) {
+        fname = nm_itemP->data;
+        if (fid) {
+            code = ScanVnode(fname, cell);
+            code = pioctl(cellFname, VIOC_FS_CMD, &status, 0);
+        } else
+            code = pioctl(fname, VIOC_FS_CMD, &status, 0);
+
+        if (code || Outputs->code) {
+            if (code)
+               fprintf(stderr, "pioctl failed with code %d.\n", code);
+            if (Outputs->code)
+               fprintf(stderr, "listdiskvnode failed with code %d.\n",
+                                Outputs->code);
+            return code;
+        } else {
+            afs_uint32 type;
+            afs_uint64 Length;
+            afs_uint32 *p;
+
+            for (p = &Outputs->int32s[0]; *p; p+=20) {
+                type = *(p+3);
+                switch (type) {
+                    case vFile:
+                    case vDirectory:
+                    case vSymlink:
+                        switch (type) {
+                            case vFile:
+                                printf("File ");
+                                break;
+                            case vDirectory:
+                                printf("Directory ");
+                                break;
+                            case vSymlink:
+                                printf("Symlink ");
+                                    break;
+                            default:
+                                printf("Unknown ");
+                                break;
+                        }
+                        printf(" %u.%u.%u ", *p, *(p+1), *(p+2));
+                        Vnode = *(p+1);
+                        /*Unique = *(p+2);*/
+                        if (type == vDirectory || verbose)
+                            printf(" %s cloned", *(p+4) ? "is" : "not");
+                        printf("\n");
+                        printf("\tmodeBits\t = 0%o\n", *(p+5));
+                        printf("\tlinkCount\t = %d\n", *(p+6));
+                        printf("\tauthor\t\t = %u\n", *(p+7));
+                        printf("\towner\t\t = %u\n", *(p+8));
+                        printf("\tgroup\t\t = %u\n", *(p+9));
+                        FillInt64(Length, *(p+11), *(p+12));
+                        printf("\tLength\t\t = %llu\t (0x%x, 0x%x)",
+                            Length, *(p+11), *(p+12));
+                        printlength(Length);
+                        printf("\n");
+                        printf("\tdataVersion\t = %u\n", *(p+13));
+                        printf("\tunixModifyTime\t =");
+                        PrintTime(p[14]); printf("\n");
+                        printf("\tserverModifyTime =");
+                        PrintTime(p[15]); printf("\n");
+                        printf("\tvn_ino_lo\t = %u\t(0x%x)",
+                                *(p+16), *(p+16));
+                        if ((*(p+16) & NAMEI_VNODEMASK) == *(p+1))
+                            printf(" tag = %d",
+                                (*(p+16) >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
+                        printf("\n");
+                            printf("\tvn_ino_hi\t = %u\t(0x%x)\n", *(p+17), *(p+17));
+                        if (type == vDirectory)
+                            printf("\tpolicyIndex\t = %u\n", *(p+19));
+                        else {
+                            printf("\tosd file on disk = %u\n", *(p+10));
+                            printf("\tosdMetadataIndex = %u\n", *(p+19));
+                        }
+                        printf("\tparent\t\t = %u\n", *(p+18));
+                        parent = *(p+18);
+                        break;
+                    default:
+                        printf("not used\n");
+                }
+            }
+        }
+        if (fid && parent) {
+            PioctlInputs.fid.Vnode = 1;
+            PioctlInputs.fid.Unique = 1;
+            while (parent) {
+                PioctlInputs.int32s[0] = parent;
+                PioctlInputs.int32s[1] = Vnode;
+                status.out_size = sizeof(struct FsCmdOutputs);
+                Inputs->command = CMD_INVERSELOOKUP;
+                code = pioctl(cellFname, VIOC_FS_CMD, &status, 0);
+                if (code || Outputs->code) {
+                    if (code)
+                        fprintf(stderr, "pioctl failed with code %d.\n", code);
+                    if (Outputs->code)
+                        fprintf(stderr, "inverseLookup failed with code %d.\n",
+                                Outputs->code);
+                    return code;
+                }
+                strcpy(tmpstr, "/");
+                strcat(tmpstr, Outputs->chars);
+                strcat(tmpstr, tmpstr2);
+                strcpy(tmpstr2, tmpstr);
+                Vnode = parent;
+                if (parent == 1)
+                    parent = 0;
+                else
+                    parent = Outputs->int32s[0];
+            }
+            printf("Path = {Mountpoint}%s\n", tmpstr);
+        }
+    }
+    return code;
+}
+
 int
 init_fscmd_afsosd(char *myVersion, char **versionstring,
 		void *inrock, void *outrock,
@@ -1955,6 +2373,25 @@ init_fscmd_afsosd(char *myVersion, char **versionstring,
     cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human friendly output");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "verbose output, implies -human");
     cmd_AddParm(ts, "-tabular", CMD_FLAG, CMD_OPTIONAL, "short output, overrides -long and -human");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
+
+    ts = cmd_CreateSyntax("threads", Threads, NULL, 0, "show server threads");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "fileserver");
+    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "file");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
+
+    ts = cmd_CreateSyntax("statistic", Statistic, CMD_REQUIRED, 0,
+		"get some fileserver statistic");
+    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "fileserver(s)");
+    cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "counters");
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "show KB/s around the clock");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "name");
+
+    ts = cmd_CreateSyntax("vnode", ListVnode, NULL, 0, "list vnode");
+    cmd_AddParm(ts, "-object", CMD_SINGLE, CMD_REQUIRED, "file or directory");
+
+    ts = cmd_CreateSyntax("fidvnode", ListVnode, NULL, 0, "list vnode");
+    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED, "volume.file.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
 
     return 0;

@@ -126,6 +126,72 @@
 
 private char *libraryVersion = "OpenAFS 1.6.2-osd";
 private char *openafsVersion = NULL;
+
+#ifndef  BUILD_SALVAGER
+/* Code which in 1.6 was located in vol/common.c */
+
+afs_uint64 total_bytes_rcvd = 0;
+afs_uint64 total_bytes_sent = 0;
+afs_uint64 total_bytes_rcvd_vpac = 0;
+afs_uint64 total_bytes_sent_vpac = 0;
+afs_uint32 KBpsRcvd[96];
+afs_uint32 KBpsSent[96];
+afs_int64 lastRcvd = 0;
+afs_int64 lastSent = 0;
+
+void
+update_total_bytes_rcvd(afs_uint32 len)
+{
+    total_bytes_rcvd += len;
+}
+
+void
+update_total_bytes_sent(afs_uint32 len)
+{
+    total_bytes_sent += len;
+}
+
+void
+TransferRate(void)
+{
+    struct timeval tp;
+    unsigned int now;
+    static unsigned int last = 0;
+    afs_int32 basetime, i;
+    static afs_int32 inited = 0;
+
+    if (!inited) {
+        for (i=0; i<96; i++) {
+            KBpsRcvd[i] = 0;
+            KBpsSent[i] = 0;
+        }
+        inited = 1;
+    }
+    gettimeofday(&tp, 0);
+    now = tp.tv_sec;
+    if (now != last
+      && ((now % 900) < 20 || (now % 900) > 880)) { /* allow jitter of 20 sec */
+        basetime = (now % 86400) - (now % 900);
+        if ((now % 900) > 880)
+            basetime += 900;
+        i = basetime / 900;
+        if (i>=0 || i<96) {
+            if (last) { /* not the 1st time */
+                KBpsRcvd[i] =
+                        ((total_bytes_rcvd - lastRcvd) >> 10) / (now -last);
+                KBpsSent[i] =
+                        ((total_bytes_sent - lastSent) >> 10) / (now -last);
+            }
+            lastRcvd = total_bytes_rcvd;
+            lastSent = total_bytes_sent;
+            last = now;
+        }
+    }
+}
+
+/*  End of code from vol/common.c */
+#endif
+
 #ifdef BUILD_SALVAGER
 extern void Log(const char *format, ...);
 #else
@@ -846,8 +912,8 @@ isOsdFile(afs_int32 osdPolicy, afs_uint32 vid, struct VnodeDiskObject *vd,
     if (vd->type != vFile)
 	return 0;
     if (!osdPolicy && ino && vd->vnodeMagic == SMALLVNODEMAGIC) {
-	ViceLog(25, ("isOsdFile: %u.%u.%u has vnodeMagic, ino, no osdPolicy\n",
-		 vid, vN, vd->uniquifier));
+	/* ViceLog(25, ("isOsdFile: %u.%u.%u has vnodeMagic, ino, no osdPolicy\n",
+		 vid, vN, vd->uniquifier)); */
 	return 0;	/* File in a normal OpenAFS volume */
     }
     if (osdPolicy && !ino && vd->osdMetadataIndex)
@@ -1653,7 +1719,7 @@ check_and_flush_metadata(struct Volume *vp, struct VnodeDiskObject *vnode,
 			afs_uint64 newpartid, newobjid;
 			newpartid = (o->part_id & 0xffffffff00000000L)
 					 | V_parentId(vp);
-			newobjid = o->obj_id;
+			newobjid = o->obj_id & TAGBITSMASK; /* clear tag bits */
 	        	code = rxosd_hardlink(o->osd_id, o->part_id, o->obj_id,
 					newpartid, o->obj_id, &newobjid);
 			if (code) {
@@ -5041,7 +5107,7 @@ setOsdPolicy(struct Volume *vol, afs_int32 osdPolicy)
     struct VnodeDiskObject vnode;
     struct VnodeDiskObject *vd = &vnode;
     struct VolumeDiskHeader diskHeader;
-    FdHandle_t *fdP;
+    FdHandle_t *fdP = NULL;
     afs_foff_t offset = 0;
 
     if (!V_osdPolicy(vol) && osdPolicy) {	/* normal volume to OSD volume */
@@ -5110,6 +5176,8 @@ setOsdPolicy(struct Volume *vol, afs_int32 osdPolicy)
 		}
 		offset += step;
 	    }
+	    FDH_CLOSE(fdP);
+	    fdP = NULL;
 	}
 	/* Remove osdMetadataFile */
 	code = VReadVolumeDiskHeader(V_id(vol), vol->partition, &diskHeader);
@@ -5133,6 +5201,12 @@ setOsdPolicy(struct Volume *vol, afs_int32 osdPolicy)
     }
 
 bad:
+    if (fdP) {
+	if (osdPolicy)
+	    FDH_CLOSE(fdP);
+	else
+	    FDH_REALLYCLOSE(fdP);
+    }
     if (!code)				/* finally update osdPolicy in the volume */
         V_osdPolicy(vol) = osdPolicy;
     return code;
@@ -6941,9 +7015,9 @@ osd_split_objects(Volume *vol, Volume *newvol, struct VnodeDiskObject *vd,
 		afs_uint64 newpartid, newobjid;
 		newpartid = o->part_id & 0xffffffff00000000LL;
 		newpartid |= V_parentId(newvol);
-		newobjid = o->obj_id;
+		newobjid = o->obj_id & TAGBITSMASK; /* clear tag bits */
 	        code = rxosd_hardlink(o->osd_id, o->part_id, o->obj_id,
-					newpartid, o->obj_id, &newobjid);
+					newpartid, newobjid, &newobjid);
 		if (code)
 		    goto bad;
 		o->part_id = newpartid;
@@ -7009,6 +7083,9 @@ init_osdvol (char *version, char **afsosdVersion, struct osd_vol_ops_v0 **osdvol
     osd_vol_ops_v0.op_split_objects = osd_split_objects;
     osd_vol_ops_v0.op_setOsdPolicy = setOsdPolicy;
     osd_vol_ops_v0.op_check_for_osd_support = check_for_osd_support;
+    osd_vol_ops_v0.op_update_total_bytes_rcvd = update_total_bytes_rcvd;
+    osd_vol_ops_v0.op_update_total_bytes_sent = update_total_bytes_sent;
+    osd_vol_ops_v0.op_transferRate = TransferRate;
 
     *osdvol = &osd_vol_ops_v0;
     openafsVersion = version;
@@ -7073,6 +7150,9 @@ int init_salv_afsosd (char *afsversion, char **afsosdVersion, void *inrock, void
     openafsVersion = afsversion;
     *afsosdVersion = libraryVersion;
     code = libafsosd_init(libafsosdrock, version);
+/* temporary to have time to attach salvager with dbx*/
+   /*  sleep(120); */
+/* temporary */
     return code;
 }
 #endif /* BUILD_SALVAGER */

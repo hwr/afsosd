@@ -41,7 +41,7 @@
 #include <afs/fileutil.h>
 #include <afs/cellconfig.h>
 
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
 #ifdef AFS_SUN5_ENV
@@ -63,7 +63,7 @@
 #define afs_open        open64
 #define afs_fopen       fopen64
 #ifndef AFS_NT40_ENV
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
 #if AFS_HAVE_STATVFS64
 # define afs_statvfs    statvfs64
 #elif AFS_HAVE_STATVFS
@@ -103,7 +103,7 @@ struct rxosd_var *rxosd_var = NULL;
 #define FDOFFSET 10000
 
 #include <pthread.h>
-#include <afs/afs_assert.h>
+#include <assert.h>
 pthread_mutex_t rxosd_hpss_mutex;
 pthread_cond_t auth_cond;
 #define MUTEX_INIT(a, b, c, d) assert(pthread_mutex_init(a, NULL) == 0)
@@ -121,8 +121,12 @@ char ourPath[128];
 char ourPrincipal[64];
 char ourKeytab[128];
 
+extern afs_int32
+libafshsm_init(afs_int32 interface, void *inrock, void **outrock,
+               afs_int32 interfaceVersion);
+
 void
-addHPSStransaction()
+addHPSStransaction(void)
 {
     HPSS_LOCK;
     while (waiting) {
@@ -135,7 +139,7 @@ addHPSStransaction()
 }
 
 void
-removeHPSStransaction()
+removeHPSStransaction(void)
 {
     HPSS_LOCK;
     HPSStransactions--;
@@ -164,7 +168,7 @@ fillsize(afs_uint64 *size, char *str)
     char unit[8], *u;
 
     u = &str[strlen(str)-1];
-    fields = sscanf(str, "%llu%s", &value, &unit);
+    fields = sscanf(str, "%llu%s", &value, unit);
     if (fields == 1)
         *size = value;
     if (fields == 2)
@@ -194,10 +198,9 @@ fillInfo(struct cosInfo *info, int id, char *min, char *max)
 }
 
 static int
-readHPSSconf()
+readHPSSconf(void)
 {
     int i, j, cos, code = ENOENT;
-    afs_uint64 value;
     struct stat64 tstat;
     char tbuffer[256];
     char minstr[128];
@@ -225,7 +228,7 @@ readHPSSconf()
 		    if (j < 0)
 			break;
 		    j = sscanf(tbuffer, "COS %u min %s max %s",
-				 &cos, &minstr, &maxstr);
+				 &cos, minstr, maxstr);
 		    if (j == 3) {
 		        for (i=0; i<MAXCOS; i++) {
 			    if (cos == info[i].cosId)
@@ -236,25 +239,25 @@ readHPSSconf()
 		        if (i<MAXCOS) 
 			    code = fillInfo(&info[i], cos, minstr, maxstr);
 		    } else {
-		        j = sscanf(tbuffer, "PRINCIPAL %s", &tmpstr);
+		        j = sscanf(tbuffer, "PRINCIPAL %s", tmpstr);
 			if (j == 1) {
 			    strncpy(ourPrincipal, tmpstr, sizeof(ourPrincipal));
 			    ourPrincipal[sizeof(ourPrincipal) -1] = 0; /*just in case */
 			    continue;
 			}
-		        j = sscanf(tbuffer, "KEYTAB %s", &tmpstr);
+		        j = sscanf(tbuffer, "KEYTAB %s", tmpstr);
 			if (j == 1) {
 			    strncpy(ourKeytab, tmpstr, sizeof(ourKeytab));
 			    ourKeytab[sizeof(ourKeytab) -1] = 0; /*just in case */
 			    continue;
 			}
-		        j = sscanf(tbuffer, "PATH %s", &tmpstr);
+		        j = sscanf(tbuffer, "PATH %s", tmpstr);
 			if (j == 1) {
 			    strncpy(ourPath, tmpstr, sizeof(ourPath));
 			    ourPath[sizeof(ourPath) -1] = 0; /*just in case */
 			    continue;
 			}
-		        j = sscanf(tbuffer, "LIB %s", &tmpstr);
+		        j = sscanf(tbuffer, "LIB %s", tmpstr);
 			if (j == 1) {
 			    int k;
 			    for (k=0; k<MAX_HPSS_LIBS; k++) {
@@ -304,7 +307,7 @@ static void checkCode(afs_int32 code)
 afs_int32 
 authenticate_for_hpss(void)
 {
-    afs_int32 code = 0, i;
+    afs_int32 code = 0;
     time_t now = time(0);
     static int authenticated = 0;
     char *principal;
@@ -324,8 +327,8 @@ authenticate_for_hpss(void)
 	    hpss_PurgeLoginCred();
 	    authenticated = 0;
 	}
-	principal = &ourPrincipal;
-	keytab = &ourKeytab;
+	principal = ourPrincipal;
+	keytab = ourKeytab;
         code = hpss_SetLoginCred(principal, hpss_authn_mech_krb5,
                              hpss_rpc_cred_client,
                              hpss_rpc_auth_type_keytab, keytab);
@@ -341,7 +344,7 @@ authenticate_for_hpss(void)
 }
 
 void
-unauthenticate_for_hpss()
+unauthenticate_for_hpss(void)
 {
     hpss_ClientAPIReset();
     hpss_PurgeLoginCred();
@@ -402,7 +405,9 @@ struct myDIR {
 
 DIR* myhpss_opendir(const char* path)
 {
+#ifndef FAKE_HPSS
     int dir_handle = 0;
+#endif
     struct myDIR *mydir = 0;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
     
@@ -412,7 +417,7 @@ DIR* myhpss_opendir(const char* path)
        sprintf(myPath, "%s/%s", ourPath, path);
     addHPSStransaction();
 #ifdef FAKE_HPSS
-    mydir = opendir(myPath);
+    mydir  = (struct myDIR *)opendir(myPath);
 #else
     dir_handle = hpss_Opendir(myPath);
     if (dir_handle < 0) {
@@ -472,8 +477,10 @@ int myhpss_stat64(const char *path, struct stat64 *buf)
 {
 #ifdef FAKE_HPSS
     struct stat64 hs;
+    hpss_stat_t *Hs = (hpss_stat_t *)&hs;
 #else
     hpss_stat_t hs;
+    hpss_stat_t *Hs = &hs;
 #endif
     int code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -483,7 +490,7 @@ int myhpss_stat64(const char *path, struct stat64 *buf)
     else
        sprintf(myPath, "%s/%s", ourPath, path);
     addHPSStransaction();
-    code = hpss_Stat(myPath, &hs);
+    code = hpss_Stat(myPath, Hs);
     removeHPSStransaction();
     checkCode(code);
     if (code)
@@ -521,14 +528,16 @@ int myhpss_fstat64(int fd, struct stat64 *buf)
 {
 #ifdef FAKE_HPSS
     struct stat64 hs;
+    hpss_stat_t *Hs = (hpss_stat_t *)&hs;
 #else
     hpss_stat_t hs;
+    hpss_stat_t *Hs = &hs;
 #endif
     int myfd = fd - FDOFFSET;
     int code;
 
     addHPSStransaction();
-    code = hpss_Fstat(myfd, &hs);
+    code = hpss_Fstat(myfd, Hs);
     removeHPSStransaction();
     checkCode(code);
     if (code)
@@ -572,7 +581,6 @@ int myhpss_stat_tapecopies(const char *path, afs_int32 *level, afs_sfsize_t *siz
     afs_uint32 StorageLevel = 0;
     hpss_xfileattr_t AttrOut;
     bf_sc_attrib_t  *scattr_ptr;
-    bf_vv_attrib_t  *vvattr_ptr;
     *size = 0;
     *level = 0;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -614,8 +622,8 @@ int myhpss_stat_tapecopies(const char *path, afs_int32 *level, afs_sfsize_t *siz
 
 #define MY_COSID 0
 
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
-int myhpss_statvfs(const char *path, struct afs_statvfs *buf)
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
+int myhpss_statvfs(const char *path, struct statvfs *buf)
 #else
 int myhpss_statfs(const char *path, struct afs_statfs *buf)
 #endif
@@ -627,7 +635,7 @@ int myhpss_statfs(const char *path, struct afs_statfs *buf)
     p = strchr(&myPath[1], '/');		/* end at 2nd slash  */
     if (p)
 	*p = 0;
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
     return statvfs(myPath, buf);
 #else
     return statfs(myPath, buf);
@@ -636,7 +644,7 @@ int myhpss_statfs(const char *path, struct afs_statfs *buf)
     int code, i;
     hpss_statfs_t hb;
 
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
     memset(buf, 0, sizeof(struct afs_statvfs));
 #else
     memset(buf, 0, sizeof(struct afs_statfs));
@@ -647,7 +655,7 @@ int myhpss_statfs(const char *path, struct afs_statfs *buf)
         removeHPSStransaction();
         checkCode(code);
 	if (!code) {
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
 	    if (buf->f_frsize && buf->f_frsize != hb.f_bsize)
 		break;
     	    buf->f_frsize = hb.f_bsize;
@@ -687,7 +695,7 @@ myhpss_Read(int fd, void *buf, size_t len)
 }
 
 ssize_t
-myhpss_Write(int fd, void *buf, size_t len)
+myhpss_Write(int fd, const void *buf, size_t len)
 {
     ssize_t bytes;
     int myfd = fd - FDOFFSET;
@@ -696,8 +704,8 @@ myhpss_Write(int fd, void *buf, size_t len)
     return bytes;	
 }
 
-ssize_t
-myhpss_Ftruncate(int fd, afs_foff_t pos)
+int
+myhpss_Ftruncate(int fd, off_t pos)
 {
     afs_int32 code;
     int myfd = fd - FDOFFSET;
@@ -708,9 +716,8 @@ myhpss_Ftruncate(int fd, afs_foff_t pos)
 }
 
 ssize_t
-myhpss_pread(int fd, void *buf, size_t len, afs_foff_t pos)
+myhpss_pread(int fd, void *buf, size_t len, off_t pos)
 {
-    afs_offs_t offset;
     ssize_t bytes;
     int myfd = fd - FDOFFSET;
 
@@ -719,9 +726,8 @@ myhpss_pread(int fd, void *buf, size_t len, afs_foff_t pos)
 }
 
 ssize_t
-myhpss_pwrite(int fd, void *buf, size_t len, afs_foff_t pos)
+myhpss_pwrite(int fd, const void *buf, size_t len, off_t pos)
 {
-    afs_offs_t offset;
     ssize_t bytes;
     int myfd = fd - FDOFFSET;
     
@@ -740,7 +746,7 @@ myhpss_lseek(int fd, hpss_off_t Offset, int whence)
 }
 
 afs_int32
-myhpss_unlink(char *path)
+myhpss_unlink(const char *path)
 {
     afs_int32 code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -754,7 +760,7 @@ myhpss_unlink(char *path)
 }
 
 afs_int32
-myhpss_mkdir(char *path, mode_t Mode)
+myhpss_mkdir(const char *path, mode_t Mode)
 {
     afs_int32 code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -768,7 +774,7 @@ myhpss_mkdir(char *path, mode_t Mode)
 }
 
 afs_int32
-myhpss_rmdir(char *path)
+myhpss_rmdir(const char *path)
 {
     afs_int32 code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -782,7 +788,7 @@ myhpss_rmdir(char *path)
 }
 
 afs_int32
-myhpss_chmod(char *path, mode_t Mode)
+myhpss_chmod(const char *path, mode_t Mode)
 {
     afs_int32 code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -791,12 +797,12 @@ myhpss_chmod(char *path, mode_t Mode)
 	sprintf(myPath, "%s", path);
     else
        sprintf(myPath, "%s/%s", ourPath, path);
-    code = hpss_Chmode(myPath, Mode);
+    code = hpss_Chmod(myPath, Mode);
     return code;
 }
 
 afs_int32
-myhpss_chown(char *path, uid_t Owner, gid_t Group)
+myhpss_chown(const char *path, uid_t Owner, gid_t Group)
 {
     afs_int32 code;
     char myPath[HPSS_MAX_AFS_PATH_NAME];
@@ -810,7 +816,7 @@ myhpss_chown(char *path, uid_t Owner, gid_t Group)
 }
 
 afs_int32
-myhpss_rename(char *old, char *new)
+myhpss_rename(const char *old, const char *new)
 {
     afs_int32 code;
     char myOld[HPSS_MAX_AFS_PATH_NAME];
@@ -829,7 +835,7 @@ myhpss_rename(char *old, char *new)
 }
 
 afs_int32
-myhpss_link(char *old, char *new)
+myhpss_link(const char *old, const char *new)
 {
     afs_int32 code;
     char myOld[HPSS_MAX_AFS_PATH_NAME];
@@ -867,7 +873,7 @@ struct ih_posix_ops ih_hpss_ops = {
     myhpss_readdir,
     myhpss_closedir,
     myhpss_link,
-#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
+#if defined(AFS_HAVE_STATVFS) || defined(AFS_HAVE_STATVFS64)
     myhpss_statvfs,
 #else
     myhpss_statfs,
@@ -896,15 +902,15 @@ init_rxosd_hpss(char *AFSVersion, char **versionstring, void *inrock,
     rxosd_var = input->var;
     
     if (*(rxosd_var->principal) && **(rxosd_var->principal)) {
-	strncpy(&ourPrincipal, *(rxosd_var->principal), sizeof(ourPrincipal));
+	strncpy(ourPrincipal, *(rxosd_var->principal), sizeof(ourPrincipal));
 	ourPrincipal[sizeof(ourPrincipal) -1] = 0; /*just in case */
     }
     if (*(rxosd_var->keytab) && **(rxosd_var->keytab)) {
-	strncpy(&ourKeytab, *(rxosd_var->keytab), sizeof(ourKeytab));
+	strncpy(ourKeytab, *(rxosd_var->keytab), sizeof(ourKeytab));
 	ourKeytab[sizeof(ourKeytab) -1] = 0; /*just in case */
     }
     if (*(rxosd_var->pathOrUrl) && **(rxosd_var->pathOrUrl)) {
-	strncpy(&ourPath, *(rxosd_var->pathOrUrl), sizeof(ourPath));
+	strncpy(ourPath, *(rxosd_var->pathOrUrl), sizeof(ourPath));
 	ourPath[sizeof(ourPath) -1] = 0; /*just in case */
     }
 
@@ -913,7 +919,7 @@ init_rxosd_hpss(char *AFSVersion, char **versionstring, void *inrock,
 
     for (i=0; i<MAX_HPSS_LIBS; i++)
         parms.ourLibs[i] = NULL;
-    parms.outrock = &ourHpss;
+    parms.outrock = (void *)&ourHpss;
     
     /* 1st call to get afs_ops filled */
     code = libafshsm_init(HPSS_INTERFACE, libafshsmrock, NULL, version);
@@ -928,8 +934,8 @@ init_rxosd_hpss(char *AFSVersion, char **versionstring, void *inrock,
     code = libafshsm_init(HPSS_INTERFACE, libafshsmrock, (void *)&parms, version);
 
     /* Give back to caller what we read from HPSS.conf */
-    *(rxosd_var->pathOrUrl) = &ourPath;
-    *(rxosd_var->principal) = &ourPrincipal;
-    *(rxosd_var->keytab) = &ourKeytab;
+    *(rxosd_var->pathOrUrl) = (char *)&ourPath;
+    *(rxosd_var->principal) = (char *)&ourPrincipal;
+    *(rxosd_var->keytab) = (char *)&ourKeytab;
     return code;
 }
