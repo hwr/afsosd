@@ -224,7 +224,7 @@ scan_osd_or_host(void)
     }
     memset(&l, 0, sizeof(l));
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_OsdList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "OSDDB_OsdList failed with code %d\n", code);
 	return;
@@ -1887,7 +1887,7 @@ ListOsds(struct cmd_syndesc *as, void *rock)
     }
     memset(&l, 0, sizeof(l));
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_OsdList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "OSDDB_OsdList failed with code %d\n", code);
 	return code;
@@ -2195,7 +2195,7 @@ CreateOsd(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_AddOsd,
-		     osddb_client, 0, e);
+		     osddb_client, UBIK_CALL_NEW, e);
     if (code) {
 	if (code == 17)
 	    fprintf(stderr, "Could not create osd, id or name already exist.\n");
@@ -2233,7 +2233,7 @@ SetOsd(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_GetOsd,
-		     osddb_client, 0, u.id, u.name, &u);
+		     osddb_client, UBIK_CALL_NEW, u.id, u.name, &u);
     if (code) {
 	fprintf(stderr, "Osd with id %s not found\n", as->parms[0].items->data);
 	return ENOENT;
@@ -2416,7 +2416,7 @@ SetOsd(struct cmd_syndesc *as, void *rock)
     }
     u.unavail &= ~OSDDB_OSD_OBSOLETE;
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_SetOsd,
-		     osddb_client, 0, &u);
+		     osddb_client, UBIK_CALL_NEW, &u);
     if (code)
 	fprintf(stderr, "OSDDB_SetOsd failed with %d\n", code);
     return code;
@@ -2448,7 +2448,7 @@ DeleteOsd(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_GetOsd,
-		     osddb_client, 0, u.id, u.name, &u);
+		     osddb_client, UBIK_CALL_NEW, u.id, u.name, &u);
     if (code) {
 	fprintf(stderr, "Osd with id %s not found\n",
 		    as->parms[0].items->data);
@@ -2456,7 +2456,7 @@ DeleteOsd(struct cmd_syndesc *as, void *rock)
     }
     u.unavail |= OSDDB_OSD_OBSOLETE;
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_SetOsd,
-		     osddb_client, 0, &u);
+		     osddb_client, UBIK_CALL_NEW, &u);
     if (code)
 	fprintf(stderr, "OSDDB_UpdateOsd failed with %d\n", code);
     else
@@ -2506,7 +2506,7 @@ ShowOsd(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_OsdList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "Couldn't get list of OSDs\n");
 	return EIO;
@@ -2642,7 +2642,7 @@ AddServer(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_AddServer,
-		     osddb_client, 0, e);
+		     osddb_client, UBIK_CALL_NEW, e);
     if (code) {
 	fprintf(stderr, "OSDDB_AddServer failed with %d.\n", code);
 	return EINVAL;
@@ -2681,7 +2681,7 @@ DeleteServer(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_DeleteServer,
-		     osddb_client, 0, e);
+		     osddb_client, UBIK_CALL_NEW, e);
     if (code) {
 	fprintf(stderr, "OSDDB_DeleteServer failed with %d.\n", code);
 	return EINVAL;
@@ -2725,7 +2725,7 @@ ShowServer(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_ServerList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "Couldn't get list of servers\n");
 	return EIO;
@@ -2878,7 +2878,7 @@ Fetchq(struct cmd_syndesc *as, void *rock)
     }
     memset(&l, 0, sizeof(l));
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_OsdList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "OSDDB_OsdList failed with code %d\n", code);
 	return code;
@@ -3276,7 +3276,7 @@ OsddbStatistic(struct cmd_syndesc *as, void *rock)
     l.osddb_statList_len = 0;
     l.osddb_statList_val = 0;
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_Statistic,
-		     osddb_client, Host, reset, &since, &l);
+		     osddb_client, UBIK_CALL_NEW, Host, reset, &since, &l);
     if (code) {
 	fprintf(stderr, "OSDDB_Statistic returns %d\n", code);
         return code;
@@ -3422,7 +3422,7 @@ AddPolicy(struct cmd_syndesc *as, void *rock)
         return -1;
     }
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_AddPolicy,
-		     osddb_client, 0, id, name, pp_output);
+		     osddb_client, UBIK_CALL_NEW, id, name, pp_output);
     switch ( code ) {
 	case 0: break;
 	case EINVAL:
@@ -3464,7 +3464,7 @@ ShowPolicy(struct cmd_syndesc *as, void *rock)
     if ( as->parms[0].items ) {			/* -id */
 	if ( !isdigit(as->parms[0].items->data[0]) ) {
 	    code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_GetPolicyID,
-		   	     osddb_client, 0,
+		   	     osddb_client, UBIK_CALL_NEW,
 				as->parms[0].items->data, &id);
 	    if (code) {
 		fprintf(stderr, "failed to lookup policy '%s': %d\n",
@@ -3501,7 +3501,7 @@ ShowPolicy(struct cmd_syndesc *as, void *rock)
     l.OsdList_val = 0;
 
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_PolicyList,
-		     osddb_client, 0, &l);
+		     osddb_client, UBIK_CALL_NEW, &l);
     if (code) {
 	fprintf(stderr, "Couldn't get list of policies: %d\n", code);
 	return EIO;
@@ -3535,7 +3535,7 @@ DeletePolicy(struct cmd_syndesc *as, void *rock)
 
     if ( !isdigit(as->parms[0].items->data[0]) ) {
 	code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_GetPolicyID,
-		         osddb_client, 0, as->parms[0].items->data, &id);
+		         osddb_client, UBIK_CALL_NEW, as->parms[0].items->data, &id);
 	if (code) {
 	    fprintf(stderr, "failed to lookup policy '%s': %d\n",
 			as->parms[0].items->data, code);
@@ -3548,7 +3548,7 @@ DeletePolicy(struct cmd_syndesc *as, void *rock)
     }
 
     code = ubik_Call((int(*)(struct rx_connection*,...))OSDDB_DeletePolicy,
-		     osddb_client, 0, id);
+		     osddb_client, UBIK_CALL_NEW, id);
     if (code) {
 	fprintf(stderr, "OSDDB_DeletePolicy failed with %d.\n", code);
 	return EINVAL;
@@ -3612,10 +3612,6 @@ hard_delete(struct cmd_syndesc *as, void *rock)
         }
 	flag |= HARD_DELETE_OLDER;
     }
-
-    if ((flag & WHOLE_VOLUME) && !(flag & HARD_DELETE_OLDER))
-	flag |= HARD_DELETE_EXACT; 
-
     scan_osd_or_host();
     GetConnection();
     code = RXOSD_hard_delete(Conn, &Oprm, packed, flag);

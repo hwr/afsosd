@@ -944,8 +944,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
             else if (th->ih_ops->stat64(name.n_path, &st) == 0) {
                 if (st.st_size == 0) /* don't bother with empty file */
                     code = th->ih_ops->unlink(name.n_path);
-                else if (st.st_nlink > 1)  
-		    /* after vos split during release of the old volume */
+                if (st.st_nlink > 1)   /* after a vos split in the old volume */
                     code = th->ih_ops->unlink(name.n_path);
                 else {
                     sprintf((char *)&unlinkname, "%s-unlinked-%d%02d%02d",
@@ -1011,15 +1010,24 @@ namei_inc(IHandle_t * h, Inode ino, int p1)
 int
 namei_replace_file_by_hardlink(IHandle_t *hLink, rxosd_IHandle_t *hTarget)
 {
-    afs_int32 code;
+    afs_int32 code, unlinkCount = 0;
     namei_t nameLink;
     namei_t nameTarget;
+    struct afs_stat_st tstat;
 
     /* Convert handle to file name. */
     namei_HandleToName(&nameLink, hLink);
     namei_HandleToName(&nameTarget, hTarget);
 
     (hLink->ih_ops->unlink)(nameLink.n_path);
+    while ((hLink->ih_ops->stat64)(nameLink.n_path, &tstat) == 0) {
+	ViceLog(0, ("namei_replace_file_by_hardlink unlink of %s failed, retrying after 1 s.\n",
+			nameLink.n_path));
+	sleep(1);
+	if (++unlinkCount > 5)
+	    return EIO;
+        (hLink->ih_ops->unlink)(nameLink.n_path);
+    }
     if (hTarget->ih_ops->hardlink) {
         code = (hTarget->ih_ops->hardlink)(nameTarget.n_path, nameLink.n_path);
 	if (code)

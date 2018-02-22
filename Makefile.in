@@ -195,8 +195,7 @@ LIBCAFSOSD = libcafsosd.${SHLIB_SUFFIX}.${LIBAFSOSDMAJOR}.${LIBAFSOSDMINOR}
 
 LIBAFSHPSS = libafshpss.${SHLIB_SUFFIX}.${LIBHPSSMAJOR}.${LIBHPSSMINOR}
 
-all: rxosd osd osddbserver ${LIBAFSOSD} ${LIBDAFSOSD} ${LIBCAFSOSD} fs readabyte \
-	${LIBAFSHPSS}
+all: rxosd osd osddbserver ${LIBAFSOSD} ${LIBDAFSOSD} ${LIBCAFSOSD} fs readabyte ${LIBAFSHPSS}
 
 ${TOP_LIBDIR}/${LIBAFSOSD}: ${LIBAFSOSD}
 	../config/shlib-install -d ${TOP_LIBDIR} \
@@ -571,19 +570,36 @@ linkcounts: linkcounts.o
 # HPSS stuff
 
 rxosd_hpss.o: rxosd_hpss.c rxosd_hsm.h
-	${AFS_CCRULE} -DBUILDING_RXOSD ${HSM_INC} ${srcdir}/rxosd_hpss.c
+	@set -x; case "${SYS_NAME}" in \
+	amd64_linux26 ) \
+		${AFS_CCRULE} -DBUILDING_RXOSD ${HSM_INC} ${srcdir}/rxosd_hpss.c ;;\
+	*) \
+		touch rxosd_hpss.o \
+		echo no rxosd_hpss.o required ;;\
+	esac
 
 l_libafshsm.c: ${srcdir}/libafshsm.c
 	ln -sf $? $@
 
 l_libafshsm.o: ${srcdir}/libafshsm.c ${srcdir}/rxosd_hsm.h \
 		${srcdir}/ourHpss_inline2.h ${srcdir}/ourHpss.h
-	${AFS_CCRULE} -DBUILD_SHLIBAFSHSM ${HSM_INC} ${srcdir}/libafshsm.c
+	@set -x; case "${SYS_NAME}" in \
+	amd64_linux26 ) \
+		${AFS_CCRULE} -DBUILD_SHLIBAFSHSM ${HSM_INC} ${srcdir}/libafshsm.c ;;\
+	*) \
+		touch l_libafshsm.o.o \
+		echo no l_libafshsm.o required ;;\
+	esac
 
 ${LIBAFSHPSS}: rxosd_hpss.o l_libafshsm.o libafshpss.map
-	../config/shlib-build -d $(srcdir) -l libafshpss \
-		-M ${LIBHPSSMAJOR} -m ${LIBHPSSMINOR} -- \
-		rxosd_hpss.o l_libafshsm.o ${MT_LIBS}
+	@set -x; case "${SYS_NAME}" in \
+	amd64_linux26 ) \
+		../config/shlib-build -d $(srcdir) -l libafshpss \
+			-M ${LIBHPSSMAJOR} -m ${LIBHPSSMINOR} -- \
+			rxosd_hpss.o l_libafshsm.o ${MT_LIBS} ;;\
+	*) \
+		echo no libafshpss ;;\
+	esac
 
 hpss_read.o: ${srcdir}/hpss_read.c hpss_inline.h
 	${CCRULEHSM} ${HSM_INC}

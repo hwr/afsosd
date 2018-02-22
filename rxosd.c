@@ -603,8 +603,10 @@ oh_free(struct o_handle *oh)
     if (!oh)
 	return;
     fdP = IH_REOPEN(oh->ih);
-    if (fdP)
+    if (fdP) {
+	ViceLog(1,("oh_free: really closing %u\n", fdP->fd_fd));
         FDH_REALLYCLOSE(fdP);
+    }
     OSD_LOCK;
     osi_Assert(oh->refcnt > 0);
 
@@ -4658,13 +4660,26 @@ hardlink(struct rx_call *call, afs_uint64 from_part,
         code = EIO;
 	goto finis;
     }
+    /* need to really close the newly created file at least on an archival OSD */
+    if (to_oh->ih->ih_dev == hsmDev) {
+        FdHandle_t *fdP = 0;
+        fdP = IH_REOPEN(to_oh->ih);
+	if (!fdP)
+            fdP = IH_OPEN(to_oh->ih);
+        if (fdP)
+            FDH_REALLYCLOSE(fdP);
+        else
+	    ViceLog(0,("hardlink: IH_OREN failed for %u.%u.%u tag %d\n",
+                    to_vid, to_vnode & RXOSD_VNODEMASK,
+                    to_unique, (to_vnode >> RXOSD_TAGSHIFT) & RXOSD_TAGMASK));
+    }
     code = namei_replace_file_by_hardlink(to_oh->ih, from_oh->ih);
 
 finis:
     if (from_oh)
-	oh_release(from_oh);
+	oh_free(from_oh);
     if (to_oh)
-	oh_release(to_oh);
+	oh_free(to_oh);
     return code;
 } /* hardlink */
 

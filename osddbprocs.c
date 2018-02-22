@@ -273,13 +273,13 @@ NameHash(char *name)
 /*  Stolen more or less from vlserver/vlutils.c */
 
 static afs_int32
-UpdateCache(struct ubik_trans *tt, void *rock)
+osddb_UpdateCache(struct ubik_trans *tt, void *rock)
 {
     afs_int32 code;
 
     code = read_osddb_header(tt);
     if (code != 0) {
-        ViceLog(0, ("UpdateCache: read_osddb_header failed with %d.\n", code));
+        ViceLog(0, ("osddb_UpdateCache: read_osddb_header failed with %d.\n", code));
     }
     return code;
 }
@@ -296,7 +296,7 @@ static CheckInit(struct ubik_trans *trans, int builddb)
      * have damaged cheader during the operation.  Necessary for a remote commit
      * since it may have changed cheader.
      */
-    if (ubik_CheckCache(trans, UpdateCache, NULL) != 0) {
+    if (ubik_CheckCache(trans, osddb_UpdateCache, NULL) != 0) {
         /* if version changed (or first call), read the header */
         ubcode = read_osddb_header(trans);
     }
