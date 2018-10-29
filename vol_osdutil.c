@@ -311,7 +311,7 @@ print_osd_metadata_verb(struct osdMetadataHandle *mh, afs_int32 verbose,
 		        if (pfile->nFetches) {
 			    printf(", %u fetches, last:",
 					pfile->nFetches);
-                            PrintDate(pfile->fetchTime);
+                            PrintTime(pfile->fetchTime);
 			}
 		    } else {
 			if (pfile->flags & RESTORE_IN_PROGRESS)

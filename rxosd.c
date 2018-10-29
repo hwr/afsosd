@@ -1789,6 +1789,8 @@ XferData(void *_f)
 	    f->oh = 0;
 	    conn = GetConnection(htonl(f->d.fileserver), 1, htons(7000), 2);
 	    code = RXAFSOSD_SetOsdFileReady(conn, &fid, &new_md5.c);
+	    if (code)
+		ViceLog(0, ("RXAFSOSD_SetOsdFileReady returns %d\n", code));
 	    PutConn(conn);
 	    if (code)
 	        f->error = code;
@@ -2178,7 +2180,7 @@ CheckCAP(struct rx_call *call, t10rock *r, struct oparmT10 *o, afs_int32 command
     in.val = cap;
     out.len = CAPCRYPTLEN;
     out.val = cap;
-    code = rx_decryptRxosdCAP(cid, epoch, NULL, &in, &out);
+    code = rx_decryptRxosdCAP(cid, epoch, NULL, &in, &out, fs_host, fs_port);
     if (code) {
 	ViceLog(0, ("rx_decryptRxosdCAP failed for cid 0x%x and epoch 0x%x witch code %d\n",
 			cid, epoch, code));
@@ -3800,7 +3802,7 @@ int writePS(struct rx_call *call, t10rock *rock,
             ViceLog(0,("writePS: link count was %d.\n", linkCount));
 	    if (!code) {
 		struct rx_connection *conn;
-	        conn = GetConnection(htonl(fs_host), 1, fs_port, 2);
+	        conn = GetConnection(fs_host, 1, fs_port, 2);
 		if (conn) {
 		    code = RXAFSOSD_UpdateOSDmetadata(conn, &old, &new);
 		    if (code)
@@ -5524,6 +5526,8 @@ restore_archive(struct rx_call *call, struct oparmT10 *o, afs_uint32 user,
     MD5_CTX md5;
     char string[FIDSTRLEN];
 
+    output->o.vsn = 1;
+    output->c.type = 1;
     if (call && !afsconf_SuperUser(confDir, call, (char *)0)) {
         code = EACCES;
 	goto finis;
@@ -5579,7 +5583,7 @@ restore_archive(struct rx_call *call, struct oparmT10 *o, afs_uint32 user,
     }
     /*
      * Before we start reading from other OSDs look whether this file
-     * couldn't be archived directly into HPSS by the OSD it lives on.
+     * couldn't be retrieved directly from HPSS by the OSD it lives on.
      * This is possible only if the object on the OSD contains the whole file.
      */
     if (oh->ih->ih_dev == hsmDev) {
@@ -5768,6 +5772,8 @@ finis:
     ViceLog(1,("restore_archive for %s returns %d after %d seconds\n",
 			sprint_oparmT10(o, string, sizeof(string)),
 			code, end_sec - start_sec));
+    ViceLog(5,("restore_archive output->o.vsn = %d, output->c.type = %d\n", 
+			output->o.vsn, output->c.type));
     return code;
 } /* restore_archive */
 
@@ -6683,7 +6689,7 @@ read_from_hpss(struct rx_call *call, struct oparmT10 *o,
     }
     odsc = &list->osd_segm_descList_val[0].objList.osd_obj_descList_val[0];
     if (odsc->o.vsn != 1) {
-	ViceLog(0, ("read_from_hpss: objcct_desc contained ometa with vsn %d\n",
+	ViceLog(0, ("read_from_hpss: object_desc contained ometa with vsn %d\n",
 		odsc->o.vsn));
 	code = EIO;
 	goto bad;

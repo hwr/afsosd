@@ -2061,6 +2061,8 @@ retry:
 		    struct osd_p_segm *ps = &pf->segmList.osd_p_segmList_val[0];
 		    struct osd_p_obj *po = &ps->objList.osd_p_objList_val[0];
 	    	    code = FindOsd(osd, &ip, &lun, 0);
+		    if (code)
+			ViceLog(0, ("FindOsd returns %d\n", code));
 		    if (!code) {
 			struct osd_cksum new_md5;
                         struct osd_p_meta *meta = 0;
@@ -2086,6 +2088,8 @@ retry:
 			om.ometa_u.t.osd_id = osd;
 			memset(&new_md5, 0, sizeof(new_md5));
                         code = rxosd_restore_archive(&om, user, &rlist, flag, &new_md5);
+			if (code)
+			    ViceLog(0,("rxosd_restore returns %d\n", code));
                         if (!code && meta && !(flag & NO_CHECKSUM))
                             code = compare_md5(meta, &new_md5.c.cksum_u.md5[0]);
                     }

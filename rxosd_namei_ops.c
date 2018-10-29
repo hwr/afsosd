@@ -1020,7 +1020,6 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, rxosd_IHandle_t *hTarget)
     namei_HandleToName(&nameTarget, hTarget);
 
     (hLink->ih_ops->unlink)(nameLink.n_path);
-<<<<<<< HEAD
     while ((hLink->ih_ops->stat64)(nameLink.n_path, &tstat) == 0) {
 	ViceLog(0, ("namei_replace_file_by_hardlink unlink of %s failed, retrying after 1 s.\n",
 			nameLink.n_path));
@@ -1029,8 +1028,6 @@ namei_replace_file_by_hardlink(IHandle_t *hLink, rxosd_IHandle_t *hTarget)
 	    return EIO;
         (hLink->ih_ops->unlink)(nameLink.n_path);
     }
-=======
->>>>>>> d5c981f7c18ce73cdb6c5508c327f559ede3b6dd
     if (hTarget->ih_ops->hardlink) {
         code = (hTarget->ih_ops->hardlink)(nameTarget.n_path, nameLink.n_path);
 	if (code)
