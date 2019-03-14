@@ -5014,7 +5014,7 @@ md5sum(struct rx_call *call, struct oparmT10 *o, struct osd_cksum *md5)
     afs_int32 code;
     struct afs_stat_st tstat;
     namei_t name;
-    char input[256];
+    char input[300];
 
     if (!afsconf_SuperUser(confDir, call, (char *)0)) {
         code = EACCES;
@@ -6893,7 +6893,7 @@ SRXOSD_hard_delete(struct rx_call *call, struct ometa *o, afs_uint32 packed_unli
     } else {
         namei_t n;
         struct afs_stat_st tstat;
-        char name[128];
+        char name[300];
 
 	if (o->vsn == 1)
             oh = oh_init_oparmT10(&o->ometa_u.t);
@@ -6948,7 +6948,7 @@ SRXOSD_relink(struct rx_call *call, struct ometa *o, afs_uint32 packed_unlinkdat
     } else {
         namei_t n;
         struct afs_stat_st tstat;
-        char name[128];
+        char name[300];
 
         if (o->vsn == 1)
             oh = oh_init_oparmT10(&o->ometa_u.t);

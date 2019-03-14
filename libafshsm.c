@@ -50,7 +50,7 @@ struct afs_ops_v0 {
     bufio_p (*BufioOpen) (char *path, int oflag, int mode);
     int (*BufioGets) (bufio_p bp, char *buf, int len);
     int (*BufioClose) (bufio_p bp);
-    const char *(*getDirPath) (afsdir_id_t string_id);
+    const char *(*afs_getDirPath) (afsdir_id_t string_id);
     void (*AssertionFailed) (const char *file, int line);
 };
 struct afs_ops_v0 afs_ops_v0;
@@ -73,7 +73,7 @@ fill_ops(struct ops_ptr *opsptr)
     afs_ops->BufioOpen = BufioOpen;
     afs_ops->BufioGets = BufioGets;
     afs_ops->BufioClose = BufioClose;
-    afs_ops->getDirPath = getDirPath;
+    afs_ops->afs_getDirPath = afs_getDirPath;
     afs_ops->AssertionFailed = opr_AssertionFailed;
     opsptr->afs_ops = afs_ops;
 }
@@ -174,9 +174,9 @@ int BufioClose(bufio_p bp)
     return (afs_ops->BufioClose)(bp);
 }
 
-const char *getDirPath(afsdir_id_t string_id)
+const char *afs_getDirPath(afsdir_id_t string_id)
 {
-    return (afs_ops->getDirPath)(string_id);
+    return (afs_ops->afs_getDirPath)(string_id);
 }
 
 void AssertionFailed(char *file, int line)

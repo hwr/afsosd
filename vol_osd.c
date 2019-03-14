@@ -3392,7 +3392,7 @@ truncate_osd_file(Vnode *vn, afs_uint64 length)
 				(fullstripes * segm->nstripes * segm->stripe_size);
 			for (l = 0; l < obj->stripe; l++)
 			    tlength -= segm->stripe_size;
-			if (tlength > segm->stripe_size);
+			if (tlength > segm->stripe_size)
 			    tlength = segm->stripe_size;
 			tlength += fullstripes * segm->stripe_size;
 		    }

@@ -482,7 +482,7 @@ createAsyncTransaction(struct rx_call *call, AFSFid *Fid, afs_int32 flag,
     }
     memset(t, 0, sizeof(struct asyncTrans));
     activeTransactions++;
-    if (activeTransactions > maxActiveTransactions);
+    if (activeTransactions > maxActiveTransactions)
         maxActiveTransactions = activeTransactions;
     if (flag & ASYNC_WRITING) {
         if (a->writer && flag == ASYNC_WRITING) {

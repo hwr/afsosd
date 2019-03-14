@@ -561,7 +561,7 @@ osddbserver: osddbserver.o o_libafsosd.o ${LIBS}
 	$(LT_LDRULE_static) osddbserver.o o_libafsosd.o ${LIBS} \
 		${TOP_LIBDIR}/libafshcrypto.a $(LIB_roken) -ldl ${XLIBS}
 
-linkcunts.o: ${srcdir}/linkcounts.c
+linkcounts.o: ${srcdir}/linkcounts.c
 	${AFS_CCRULE}
 
 linkcounts: linkcounts.o

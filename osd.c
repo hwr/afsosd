@@ -157,7 +157,7 @@ fill_ometa(char *s)
     afs_int32 fields, code = 0;
     struct ometa *o = &Oprm;
 
-    memset(o, 0, sizeof(o));
+    memset(o, 0, sizeof(*o));
     o->vsn = 2;
     fields = sscanf(s, "%llu.%llu.%llu.%u-%u.%u.%u",
 			&o->ometa_u.f.rwvol,
@@ -179,7 +179,7 @@ fill_ometa_volume(char *s)
     afs_int32 fields, code = 0;
     struct ometa *o = &Oprm;
 
-    memset(o, 0, sizeof(o));
+    memset(o, 0, sizeof(*o));
     o->vsn = 2;
     fields = sscanf(s, "%llu.%llu.%llu.%u-%u.%u.%u",
 			&o->ometa_u.f.rwvol,

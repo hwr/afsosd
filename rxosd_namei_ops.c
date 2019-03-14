@@ -922,7 +922,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    FdHandle_t *tfdP = NULL;
             int do_unlink = 1;
             struct afs_stat st;
-            char unlinkname[128];
+            char unlinkname[300];
             time_t t;
             struct timeval now;
             struct tm *TimeFields;
@@ -1052,7 +1052,7 @@ namei_copy_on_write(IHandle_t *h)
     if ((h->ih_ops->stat64)(name.n_path, &tstat) < 0)
 	return EIO;
     if (tstat.st_nlink > 1) {                   /* do a copy on write */
-	char path[259];
+	char path[300];
 	char *buf;
 	afs_size_t size = tstat.st_size;
 	ssize_t tlen;		
@@ -1271,7 +1271,7 @@ GetLinkTableVersion(FdHandle_t *fh)
 	    namei_t name;
 	    int code, fd, ogm_parm, tag;
 	    struct afs_stat tstat;
-	    char badlinktable[128];
+	    char badlinktable[300];
             time_t t;
             struct timeval now;
             struct tm *TimeFields;
