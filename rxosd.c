@@ -5526,22 +5526,17 @@ restore_archive(struct rx_call *call, struct oparmT10 *o, afs_uint32 user,
     MD5_CTX md5;
     char string[FIDSTRLEN];
 
-    output->o.vsn = 1;
-    output->c.type = 1;
     if (call && !afsconf_SuperUser(confDir, call, (char *)0)) {
         code = EACCES;
 	goto finis;
     }
-    for (i=0; i<MAXOSDSTRIPES; i++)
-	rcall[i] = NULL;
     if (output) { 	/* Must do that early to avoid RXGEN_SS_MARSHAL when
-			   returning after FindInFetchqueue! */
-	memset(output, 0, sizeof(struct osd_cksum));
-	output->o.vsn = 1;
+			   returning from FindInFetchqueue! */
 	output->o.ometa_u.t.obj_id =  o->obj_id;
 	output->o.ometa_u.t.part_id =  o->part_id;
-	output->c.type = 1;
     }
+    for (i=0; i<MAXOSDSTRIPES; i++)
+	rcall[i] = NULL;
     oh = oh_init(o->part_id, o->obj_id);
     if (HSM || oh->ih->ih_dev == hsmDev) {
 	if (!call) { /* only try to open when restore_archive was called internally */
@@ -5794,8 +5789,14 @@ SRXOSD_restore_archive(struct rx_call *call, struct ometa *o, afs_uint32 user,
 
     SETTHREADEXCLUSIVEACTIVE(18, call, o);
 
+    if (output) { 	/* Must do that early to avoid RXGEN_SS_MARSHAL when
+			   returning with an error! */
+	memset(output, 0, sizeof(struct osd_cksum));
+	output->o.vsn = 1;
+	output->c.type = 1;
+    }
     if (MyThreadEntry < 0) {	/* Already another thread doing the same */
-	return EINVAL;
+	return OSD_WAIT_FOR_TAPE;
     }
 
     if (o->vsn == 1) {
@@ -6805,7 +6806,7 @@ SRXOSD_read_from_hpss(struct rx_call *call, struct ometa *o,
     SETTHREADEXCLUSIVEACTIVE(27, call, o);
 
     if (MyThreadEntry < 0) {	/* Already another thread doing the same */
-	return EINVAL;
+	return OSD_WAIT_FOR_TAPE;
     }
 
     if (o->vsn == 1) {
